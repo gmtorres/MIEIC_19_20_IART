@@ -1,6 +1,8 @@
 {
     "files.associations": {
         "*.pl": "prolog",
-        "iostream": "cpp"
+        "iostream": "cpp",
+        "random": "cpp",
+        "cmath": "cpp"
     }
 }
