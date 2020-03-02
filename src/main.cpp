@@ -8,5 +8,9 @@ int main(void){
 
     cout<<"Ola"<<endl;
 
+    Board board = Board();
+
+    board.display();
+
     return 0;
 }

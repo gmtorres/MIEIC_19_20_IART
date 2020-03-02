@@ -11,10 +11,31 @@ class Board{
 private:
 
     int board[BOARD_SIZE*BOARD_SIZE];
+    ulong board_white = 9114834846030495744L;
+    ulong board_black = 6717054L;
 
     float evaluate_board1();
     float evaluate_board2();
     float evaluate_board3();
+
+    bool get_piece_white(size_t pos);
+    bool get_piece_white(size_t x, size_t y);
+    bool get_piece_black(size_t pos);
+    bool get_piece_black(size_t x, size_t y);
+    bool is_piece(size_t pos);
+    bool is_piece(size_t x, size_t y);
+
+    void put_piece_white(size_t pos);
+    void put_piece_white(size_t x, size_t y);
+    bool remove_piece_white(size_t pos);
+    bool remove_piece_white(size_t x, size_t y);
+    void put_piece_black(size_t pos);
+    void put_piece_black(size_t x, size_t y);
+    bool remove_piece_black(size_t pos);
+    bool remove_piece_black(size_t x, size_t y);
+
+    void move_piece_white(size_t pos_origem, size_t pos_destino);
+    void move_piece_black(size_t pos_origem, size_t pos_destino);
 
 public:
 
