@@ -10,11 +10,10 @@ class Board{
 
 private:
 
-    int board[BOARD_SIZE*BOARD_SIZE];
     ulong board_white = 9114834846030495744L;
     ulong board_black = 6717054L;
-    int jumpingMove = -1; //-1 :  false, outro numero: posiçao da peça
-    int capturingMove = -1; //-1 :  false, outro numero: posiçao da peça
+    signed char jumpingMove = -1; //-1 :  false, outro numero: posiçao da peça
+    signed char capturingMove = -1; //-1 :  false, outro numero: posiçao da peça
 
     float evaluate_board1();
     float evaluate_board2();
@@ -42,9 +41,11 @@ private:
     void move_piece_black(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest);
 
 
-    bool valid_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
+    unsigned int valid_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
 
 public:
+
+    bool current_player = 1;
 
     Board();
 
@@ -81,7 +82,7 @@ public:
     Game();
 
     void get_move();
-    void make_move();
+    void make_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
 
     void display();
     

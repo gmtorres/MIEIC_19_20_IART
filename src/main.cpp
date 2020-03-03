@@ -12,7 +12,15 @@ int main(void){
 
     game.display();
 
-    game.get_move();
+    game.make_move(5,5,4,4,true);
+
+    game.display();
+
+    game.make_move(5,2,4,3,false);
+
+    game.display();
+
+    game.make_move(4,4,4,2,true);
 
     game.display();
 
