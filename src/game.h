@@ -13,6 +13,8 @@ private:
     int board[BOARD_SIZE*BOARD_SIZE];
     ulong board_white = 9114834846030495744L;
     ulong board_black = 6717054L;
+    int jumpingMove = -1; //-1 :  false, outro numero: posiçao da peça
+    int capturingMove = -1; //-1 :  false, outro numero: posiçao da peça
 
     float evaluate_board1();
     float evaluate_board2();
@@ -34,14 +36,20 @@ private:
     bool remove_piece_black(size_t pos);
     bool remove_piece_black(size_t x, size_t y);
 
-    void move_piece_white(size_t pos_origem, size_t pos_destino);
-    void move_piece_black(size_t pos_origem, size_t pos_destino);
+    void move_piece_white(size_t pos_orig, size_t pos_dest);
+    void move_piece_black(size_t pos_orig, size_t pos_dest);
+    void move_piece_white(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest);
+    void move_piece_black(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest);
+
+
+    bool valid_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
 
 public:
 
     Board();
 
-    void make_move(/*decide parameters*/);
+    void move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
+    
     vector <Board> get_valid_boards(bool white_player);
 
     bool gameover(bool white_player);

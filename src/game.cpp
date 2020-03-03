@@ -82,19 +82,64 @@ bool Board::remove_piece_black(size_t pos){
 bool Board::remove_piece_black(size_t x, size_t y){
     return remove_piece_black(y*BOARD_SIZE + x);
 }
-void Board::move_piece_white(size_t pos_origem, size_t pos_destino){
-    if(remove_piece_white(pos_origem))
-        put_piece_white(pos_destino);
+void Board::move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player){
+    if(!valid_move(x_orig,y_orig,x_dest,y_dest,white_player))
+        return;
+    if(white_player)
+        move_piece_white(x_orig,y_orig,x_dest,y_dest);
+    else
+        move_piece_black(x_orig,y_orig,x_dest,y_dest);
 }
-void Board::move_piece_black(size_t pos_origem, size_t pos_destino){
-    if(remove_piece_black(pos_origem))
-        put_piece_black(pos_destino);
+void Board::move_piece_white(size_t pos_orig, size_t pos_dest){
+    if(remove_piece_white(pos_orig))
+        put_piece_white(pos_dest);
+}
+void Board::move_piece_black(size_t pos_orig, size_t pos_dest){
+    if(remove_piece_black(pos_orig))
+        put_piece_black(pos_dest);
+}
+void Board::move_piece_white(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest){
+    move_piece_white(y_orig*BOARD_SIZE+x_orig, y_dest*BOARD_SIZE+x_dest);
+}
+void Board::move_piece_black(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest){
+    move_piece_black(y_orig*BOARD_SIZE+x_orig, y_dest*BOARD_SIZE+x_dest);
+}
+
+
+bool Board::valid_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player){
+    
+    //se nao houver peça daquele jogador na posição de origem
+    if((white_player && !get_piece_white(x_orig,y_orig)) || (!white_player && !get_piece_black(x_dest,y_dest)))
+        return false;
+    //se houver peça na posição de destino,
+    if(is_piece(x_dest,y_dest)){
+        return false;
+    }
+
+    int x_delta = x_dest - x_orig;
+    int y_delta = y_dest - y_orig;
+
+    
+    //se não houver peça na posição de destino
+
+    if((x_delta == -1 || x_delta == 0 || x_delta == 1) && (y_delta == -1 || y_delta == 1)){
+        //é possivel fazer um ORDINARY MOVE
+        if((white_player && y_delta == -1) || (!white_player && y_delta == 1))
+            return true;
+    }
+    else if((x_delta == -2 || x_delta == 0 || x_delta == 2) && (y_delta == -2 || y_delta == 2)){
+        //é possivel fazer um JUMPING MOVE
+        if((white_player && y_delta == -2 && get_piece_white(x_orig+x_delta/2,y_orig+y_delta/2)) || (!white_player && y_delta == 2 && get_piece_black(x_orig+x_delta/2,y_orig+y_delta/2)))
+            return true;
+    }
+
+    
+    return false;
 }
 
 
 void Board::display(){
 
-    move_piece_white(60,30);
 
     for(size_t a = 0; a < BOARD_SIZE; ++a){
         for(size_t b = 0; b < BOARD_SIZE; ++b){
@@ -114,7 +159,24 @@ void Board::display(){
 /*--------------------- GAME ---------------------*/
 
 Game::Game(){
+    board = Board();
     cout<<"Board created"<<endl;
+}
+
+void Game::get_move(){
+    size_t x_orig,y_orig,x_dest,y_dest;
+    cout<<"Origin x: "; cin>>x_orig;
+    cout<<"Origin Y: "; cin>>y_orig;
+    cout<<"Destination x: "; cin>>x_dest;
+    cout<<"Destination Y: "; cin>>y_dest;
+    board.move_piece(x_orig,y_orig,x_dest,y_dest,true);
+}
+
+
+
+
+void Game::display(){
+    board.display();
 }
 
 

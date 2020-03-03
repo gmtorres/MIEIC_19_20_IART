@@ -8,9 +8,13 @@ int main(void){
 
     cout<<"Ola"<<endl;
 
-    Board board = Board();
+    Game game = Game();
 
-    board.display();
+    game.display();
+
+    game.get_move();
+
+    game.display();
 
     return 0;
 }
