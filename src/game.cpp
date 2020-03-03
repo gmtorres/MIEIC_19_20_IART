@@ -1,11 +1,52 @@
 #include "game.h"
 
-Board::Board(){
+Board::Board(){}
 
+vector<Move> Board::get_valid_moves(bool white_player){
+    vector<Move> moves = vector<Move>();
+    ulong board;
+    if(white_player) board = board_white;
+    else if(!white_player) board = board_black;
+    size_t pos = 0;
+    while(board != 0){
+        bool piece = board & 1L;
+        if(piece){
+            size_t x = pos%BOARD_SIZE;
+            size_t y = pos/BOARD_SIZE;
+            if(white_player){
+                if(valid_move(x,y,x-2,y,true)) moves.push_back(Move(x,y,x-2,y));
+                if(valid_move(x,y,x-2,y-2,true)) moves.push_back(Move(x,y,x-2,y-2));
+                if(valid_move(x,y,x-1,y-1,true)) moves.push_back(Move(x,y,x-1,y-1));
+                if(valid_move(x,y,x,y-1,true)) moves.push_back(Move(x,y,x,y-1));
+                if(valid_move(x,y,x,y-2,true)) moves.push_back(Move(x,y,x,y-2));
+                if(valid_move(x,y,x+1,y-1,true)) moves.push_back(Move(x,y,x+1,y-1));
+                if(valid_move(x,y,x+2,y-2,true)) moves.push_back(Move(x,y,x+2,y-2));
+                if(valid_move(x,y,x+2,y,true)) moves.push_back(Move(x,y,x+2,y));
+            }else if(!white_player){
+                if(valid_move(x,y,x-2,y,false)) moves.push_back(Move(x,y,x-2,y));
+                if(valid_move(x,y,x-2,y+2,false)) moves.push_back(Move(x,y,x-2,y+2));
+                if(valid_move(x,y,x-1,y+1,false)) moves.push_back(Move(x,y,x-1,y+1));
+                if(valid_move(x,y,x,y+1,false)) moves.push_back(Move(x,y,x,y+1));
+                if(valid_move(x,y,x,y+2,false)) moves.push_back(Move(x,y,x,y+2));
+                if(valid_move(x,y,x+1,y+1,false)) moves.push_back(Move(x,y,x+1,y+1));
+                if(valid_move(x,y,x+2,y+2,false)) moves.push_back(Move(x,y,x+2,y+2));
+                if(valid_move(x,y,x+2,y,false)) moves.push_back(Move(x,y,x+2,y));
+            }
+        }
+        ++pos;
+        board = board >> 1;
+    }
+    return moves;
 }
 
-vector<Board> Board::get_valid_boards(bool white){
-    return vector<Board> ();
+vector<Board> Board::get_valid_boards(bool white_player){
+    vector<Move> moves = get_valid_moves(white_player);
+    vector<Board> boards = vector<Board> ();
+    for(auto it = moves.begin(); it != moves.end(); ++it){
+        //TODO
+    }
+
+    return boards;
 }
 
 float Board::eval(){

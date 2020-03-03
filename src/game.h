@@ -6,6 +6,16 @@
 
 using namespace std;
 
+class Move{
+public:
+    size_t x_orig;
+    size_t y_orig;
+    size_t x_dest;
+    size_t y_dest;
+    Move(size_t x_o,size_t y_o,size_t x_d,size_t y_d) : x_orig(x_o), y_orig(y_o), x_dest(x_d), y_dest(y_d) {};
+};
+
+
 class Board{
 
 private:
@@ -51,6 +61,7 @@ public:
 
     void move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
     
+    vector <Move> get_valid_moves(bool white_player);
     vector <Board> get_valid_boards(bool white_player);
 
     bool gameover(bool white_player);
@@ -66,7 +77,6 @@ class Game{
 
 private:
 
-    Board board;
     bool white_player; //player white or black, player 1 or 2
     int player1 , player2; // 0 - Human;    1 - CPU level 1;    2 - CPU level 2;    3 - CPU level 3;    diferent minimax aproaches, depth, prunning, optimizations
 
@@ -78,6 +88,8 @@ private:
     void find_best_move();
 
 public:
+
+    Board board;
 
     Game();
 
