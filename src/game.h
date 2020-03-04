@@ -4,6 +4,10 @@
 #define BOARD_SIZE 8
 #define INF 1000000
 
+#define ORDINARY_MOVE 1
+#define JUMPING_MOVE 2
+#define CAPTURE 3
+
 using namespace std;
 
 class Move{
@@ -12,6 +16,7 @@ public:
     size_t y_orig;
     size_t x_dest;
     size_t y_dest;
+    unsigned int type;
     Move(size_t x_o,size_t y_o,size_t x_d,size_t y_d) : x_orig(x_o), y_orig(y_o), x_dest(x_d), y_dest(y_d) {};
 };
 
@@ -50,8 +55,10 @@ private:
     void move_piece_white(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest);
     void move_piece_black(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest);
 
+    void get_valid_moves_aux(vector<Move> &moves, Move move, bool &capture, bool white_player);
 
     unsigned int valid_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
+    unsigned int valid_move_aux(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
 
 public:
 
@@ -59,7 +66,7 @@ public:
 
     Board();
 
-    void move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
+    bool move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
     
     vector <Move> get_valid_moves(bool white_player);
     vector <Board> get_valid_boards(bool white_player);
@@ -77,7 +84,7 @@ class Game{
 
 private:
 
-    bool white_player; //player white or black, player 1 or 2
+    //bool white_player = 1; //player white or black, player 1 or 2
     int player1 , player2; // 0 - Human;    1 - CPU level 1;    2 - CPU level 2;    3 - CPU level 3;    diferent minimax aproaches, depth, prunning, optimizations
 
     int movement_phase; // for moves that is needed more than one phase, placing two pieces, deciding where to eat next, and so on
@@ -91,13 +98,16 @@ public:
 
     Board board;
 
-    Game();
+    Game(int player1Mode, int player2Mode);
 
     void get_move();
-    void make_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
+    void get_move_human();
+    void get_move_ai1();
+    bool make_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
 
-    void display();
-    
+    void game_loop();
+
+    void display();    
 
 };
 

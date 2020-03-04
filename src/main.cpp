@@ -8,11 +8,11 @@ int main(void){
 
     cout<<"Ola"<<endl;
 
-    Game game = Game();
+    Game game = Game(0,1);
 
-    game.board.get_valid_moves(0);
+    //game.board.get_valid_boards(1);
 
-    game.display();
+    game.game_loop();
 
     return 0;
 }
