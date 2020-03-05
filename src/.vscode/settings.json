@@ -5,6 +5,8 @@
         "random": "cpp",
         "cmath": "cpp",
         "ostream": "cpp",
-        "vector": "cpp"
+        "vector": "cpp",
+        "*.tcc": "cpp",
+        "type_traits": "cpp"
     }
 }

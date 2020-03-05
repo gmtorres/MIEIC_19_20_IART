@@ -202,10 +202,25 @@ bool Board::remove_piece_black(size_t x, size_t y){
 }
 
 
+//CHECK if OKAY
+bool Board::is_last_white(size_t x, size_t y){
+    return (1 << (y * BOARD_SIZE + x)) & 126L;
+}
+bool Board::is_last_black(size_t x, size_t y){
+    return (1 << (y * BOARD_SIZE + x)) & 9079256848778919936L;
+}
+bool Board::is_drop_zone_white(size_t x, size_t y){
+    return (1 << (y * BOARD_SIZE + x)) & 9114722695844462592L;
+}
+bool Board::is_drop_zone_black(size_t x, size_t y){
+    return (1 << (y * BOARD_SIZE + x)) & 32382L;
+}
+
+
 bool Board::move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player){
     int is_valid = valid_move(x_orig,y_orig,x_dest,y_dest,white_player);
     if(is_valid == false)
-        return false;;
+        return false;
     if(white_player)
         move_piece_white(x_orig,y_orig,x_dest,y_dest);
     else if(!white_player)
@@ -222,8 +237,6 @@ bool Board::move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest
             current_player = !current_player;
             jumpingMove = -1;
             capturingMove = -1;
-        }else{
-            //cout<<"Posso continuar a saltar"<<endl;
         }
     }else if(is_valid == CAPTURE){ //CAPTURING
         if(white_player) remove_piece_black((x_orig + x_dest)/2 , (y_orig + y_dest)/2);
@@ -270,56 +283,61 @@ unsigned int Board::valid_move_aux(size_t x_orig, size_t y_orig,size_t x_dest, s
     //não pode ser maior que o tabuleiro
     if(x_dest >= BOARD_SIZE || y_dest >=BOARD_SIZE)
         return false;
-    //se nao houver peça daquele jogador na posição de origem
-    if((white_player && !get_piece_white(x_orig,y_orig)) || (!white_player && !get_piece_black(x_orig,y_orig)))
-        return false;
     //se houver peça na posição de destino,
-    //cout<<"entrou "<<x_dest<<","<<y_dest<<endl;
     if(is_piece(x_dest,y_dest)){
         return false;
     }
-    //cout<<"passou"<<endl;
-    if(jumpingMove != -1){
-        //cout<<"tenho que saltar "<<x_orig<<","<<y_orig<<"     "<<white_player<<endl;
-        if(int(y_orig*BOARD_SIZE+x_orig) != jumpingMove)
+    if(dropPiece == 0){
+        //se nao houver peça daquele jogador na posição de origem
+        if((white_player && !get_piece_white(x_orig,y_orig)) || (!white_player && !get_piece_black(x_orig,y_orig)))
             return false;
-        //cout<<"passei"<<endl;
-    }
-    else if(capturingMove != -1){
-        if(int(y_orig*BOARD_SIZE+x_orig) != capturingMove)
-            return false;
-    }
-
-    int x_delta = x_dest - x_orig;
-    int y_delta = y_dest - y_orig;
-
-    //se não houver peça na posição de destino
-    if((x_delta == -1 || x_delta == 0 || x_delta == 1) && (y_delta == -1 || y_delta == 1) && jumpingMove == -1 && capturingMove == -1){
-        //é possivel fazer um ORDINARY MOVE
-        if((white_player && y_delta == -1) || (!white_player && y_delta == 1))
-            return ORDINARY_MOVE; //ORDINARY MOVE
-    }
-    else if((x_delta == -2 || x_delta == 0 || x_delta == 2)){
-        int mid_x=x_orig+x_delta/2;
-        int mid_y=y_orig+y_delta/2;
-        // JUMPING MOVE ou alguns casos do CAPTURE
-        if(y_delta == -2 || y_delta == 2){
-            if(white_player && y_delta == -2){
-                if(get_piece_white(mid_x,mid_y) && capturingMove == -1)
-                    return JUMPING_MOVE; //JUMP
-                else if(get_piece_black(mid_x,mid_y) && jumpingMove == -1)
-                    return CAPTURE; //CAPTURE
-            }
-            else if(!white_player && y_delta == 2){
-                if(get_piece_black(mid_x,mid_y) && capturingMove == -1)
-                    return JUMPING_MOVE; //JUMP
-                else if(get_piece_white(mid_x,mid_y) && jumpingMove == -1)
-                    return CAPTURE; //CAPTURE
-            }
-        }else if(y_delta == 0 && x_delta != 0 && jumpingMove == -1){
-            if((white_player && get_piece_black(mid_x,mid_y)) || (!white_player && get_piece_white(mid_x,mid_y)) )
-                return CAPTURE; //CAPTURE
+        if(jumpingMove != -1){
+            //cout<<"tenho que saltar "<<x_orig<<","<<y_orig<<"     "<<white_player<<endl;
+            if(int(y_orig*BOARD_SIZE+x_orig) != jumpingMove)
+                return false;
+            //cout<<"passei"<<endl;
         }
+        else if(capturingMove != -1){
+            if(int(y_orig*BOARD_SIZE+x_orig) != capturingMove)
+                return false;
+        }
+
+        int x_delta = x_dest - x_orig;
+        int y_delta = y_dest - y_orig;
+
+        //se não houver peça na posição de destino
+        if((x_delta == -1 || x_delta == 0 || x_delta == 1) && (y_delta == -1 || y_delta == 1) && jumpingMove == -1 && capturingMove == -1){
+            //é possivel fazer um ORDINARY MOVE
+            if((white_player && y_delta == -1) || (!white_player && y_delta == 1))
+                return ORDINARY_MOVE; //ORDINARY MOVE
+        }
+        else if((x_delta == -2 || x_delta == 0 || x_delta == 2)){
+            int mid_x=x_orig+x_delta/2;
+            int mid_y=y_orig+y_delta/2;
+            // JUMPING MOVE ou alguns casos do CAPTURE
+            if(y_delta == -2 || y_delta == 2){
+                if(white_player && y_delta == -2){
+                    if(get_piece_white(mid_x,mid_y) && capturingMove == -1)
+                        return JUMPING_MOVE; //JUMP
+                    else if(get_piece_black(mid_x,mid_y) && jumpingMove == -1)
+                        return CAPTURE; //CAPTURE
+                }
+                else if(!white_player && y_delta == 2){
+                    if(get_piece_black(mid_x,mid_y) && capturingMove == -1)
+                        return JUMPING_MOVE; //JUMP
+                    else if(get_piece_white(mid_x,mid_y) && jumpingMove == -1)
+                        return CAPTURE; //CAPTURE
+                }
+            }else if(y_delta == 0 && x_delta != 0 && jumpingMove == -1){
+                if((white_player && get_piece_black(mid_x,mid_y)) || (!white_player && get_piece_white(mid_x,mid_y)) )
+                    return CAPTURE; //CAPTURE
+            }
+        }
+    }else{
+        if(white_player && is_drop_zone_white(x_dest,y_dest))
+            return DROP;
+        if(!white_player && is_drop_zone_black(x_dest,y_dest))
+            return DROP;
     }
 
     return false;

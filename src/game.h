@@ -7,6 +7,7 @@
 #define ORDINARY_MOVE 1
 #define JUMPING_MOVE 2
 #define CAPTURE 3
+#define DROP 4
 
 using namespace std;
 
@@ -34,6 +35,7 @@ public: //private:
     ulong board_black = 6717054L;
     int jumpingMove = -1; //-1 :  false, outro numero: posiçao da peça
     int capturingMove = -1; //-1 :  false, outro numero: posiçao da peça
+    int dropPiece = 0;
 
     float evaluate_board1();
     float evaluate_board2();
@@ -64,6 +66,12 @@ public: //private:
 
     unsigned int valid_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
     unsigned int valid_move_aux(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
+
+    bool is_last_white(size_t x, size_t y);
+    bool is_last_black(size_t x, size_t y);
+
+    bool is_drop_zone_white(size_t x, size_t y);
+    bool is_drop_zone_black(size_t x, size_t y);
 
 public:
 

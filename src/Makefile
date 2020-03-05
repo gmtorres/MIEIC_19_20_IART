@@ -1,4 +1,4 @@
-PROG = Eximio
+PROG = Eximo
 
 CC = g++
 CPPFLAGS = -Wall
