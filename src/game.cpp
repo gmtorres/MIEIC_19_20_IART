@@ -1,7 +1,7 @@
 #include "game.h"
 
 void Move::display(bool t=false){
-    cout<<x_orig<<","<<y_dest<<" ->"<<x_dest<<","<<y_dest;
+    cout<<x_orig<<","<<y_orig<<" ->"<<x_dest<<","<<y_dest;
     if(t) cout<<"  "<< type;
 }
 
@@ -12,7 +12,7 @@ Board::Board(const Board &old){
     jumpingMove = old.jumpingMove;
     capturingMove = old.capturingMove;
     current_player = old.current_player;
-
+    dropPiece = old.dropPiece;
 }
 
 void Board::get_valid_moves_aux(vector<Move> &moves, Move move, bool &capture, bool white_player){
@@ -41,34 +41,45 @@ vector<Move> Board::get_valid_moves(bool white_player){
 
     bool capture_possible = false;
 
-    size_t pos = 0;
-    while(board != 0){
-        bool piece = board & 1L;
-        if(piece){
-            size_t x = pos%BOARD_SIZE;
-            size_t y = pos/BOARD_SIZE;
-            if(white_player){
-                get_valid_moves_aux(moves,Move(x,y,x-2,y),capture_possible,true);
-                get_valid_moves_aux(moves,Move(x,y,x-2,y-2),capture_possible,true);
-                get_valid_moves_aux(moves,Move(x,y,x-1,y-1),capture_possible,true);
-                get_valid_moves_aux(moves,Move(x,y,x,y-1),capture_possible,true);
-                get_valid_moves_aux(moves,Move(x,y,x,y-2),capture_possible,true);
-                get_valid_moves_aux(moves,Move(x,y,x+1,y-1),capture_possible,true);
-                get_valid_moves_aux(moves,Move(x,y,x+2,y-2),capture_possible,true);
-                get_valid_moves_aux(moves,Move(x,y,x+2,y),capture_possible,true);
-            }else if(!white_player){
-                get_valid_moves_aux(moves,Move(x,y,x-2,y),capture_possible,false);
-                get_valid_moves_aux(moves,Move(x,y,x-2,y+2),capture_possible,false);
-                get_valid_moves_aux(moves,Move(x,y,x-1,y+1),capture_possible,false);
-                get_valid_moves_aux(moves,Move(x,y,x,y+1),capture_possible,false);
-                get_valid_moves_aux(moves,Move(x,y,x,y+2),capture_possible,false);
-                get_valid_moves_aux(moves,Move(x,y,x+1,y+1),capture_possible,false);
-                get_valid_moves_aux(moves,Move(x,y,x+2,y+2),capture_possible,false);
-                get_valid_moves_aux(moves,Move(x,y,x+2,y),capture_possible,false);
+    if(dropPiece == 0){
+        size_t pos = 0;
+        while(board != 0){
+            bool piece = board & 1L;
+            if(piece){
+                size_t x = pos%BOARD_SIZE;
+                size_t y = pos/BOARD_SIZE;
+                if(white_player){
+                    get_valid_moves_aux(moves,Move(x,y,x-2,y),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x-2,y-2),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x-1,y-1),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x,y-1),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x,y-2),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x+1,y-1),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x+2,y-2),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x+2,y),capture_possible,true);
+                }else if(!white_player){
+                    get_valid_moves_aux(moves,Move(x,y,x-2,y),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x-2,y+2),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x-1,y+1),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x,y+1),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x,y+2),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x+1,y+1),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x+2,y+2),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x+2,y),capture_possible,false);
+                }
+            }
+            ++pos;
+            board = board >> 1;
+        }
+    }else{
+        cout<<"lets drop"<<endl;
+        for(size_t y = 0; y < 2; ++y){
+            for(size_t x = 1; x < BOARD_SIZE; ++x){
+                if(white_player) get_valid_moves_aux(moves,Move(0,0,x, y + 6),capture_possible,true);
+                if(!white_player) get_valid_moves_aux(moves,Move(0,0,x, y),capture_possible,false);
+                
             }
         }
-        ++pos;
-        board = board >> 1;
     }
     return moves;
 }
@@ -204,51 +215,122 @@ bool Board::remove_piece_black(size_t x, size_t y){
 
 //CHECK if OKAY
 bool Board::is_last_white(size_t x, size_t y){
-    return (1 << (y * BOARD_SIZE + x)) & 126L;
+    return y == 0;
 }
 bool Board::is_last_black(size_t x, size_t y){
-    return (1 << (y * BOARD_SIZE + x)) & 9079256848778919936L;
+    return y == BOARD_SIZE-1;
 }
 bool Board::is_drop_zone_white(size_t x, size_t y){
-    return (1 << (y * BOARD_SIZE + x)) & 9114722695844462592L;
+    return (y == BOARD_SIZE -1 || y == BOARD_SIZE - 2) && (x != 0 && x != BOARD_SIZE - 1) ;
 }
 bool Board::is_drop_zone_black(size_t x, size_t y){
-    return (1 << (y * BOARD_SIZE + x)) & 32382L;
+    return (y == 0 || y == 1) && (x != 0 && x != BOARD_SIZE - 1) ;
 }
 
 
 bool Board::move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player){
     int is_valid = valid_move(x_orig,y_orig,x_dest,y_dest,white_player);
     if(is_valid == false)
-        return false;
-    if(white_player)
-        move_piece_white(x_orig,y_orig,x_dest,y_dest);
-    else if(!white_player)
-        move_piece_black(x_orig,y_orig,x_dest,y_dest);
-    
-    if(is_valid == ORDINARY_MOVE){ //NORMAL MOVE
-        current_player = !current_player;
-        jumpingMove = -1;
-        capturingMove = -1;
-    }else if(is_valid == JUMPING_MOVE){ //JUMPING MOVE
-        jumpingMove = y_dest * BOARD_SIZE + x_dest;
-        vector <Move> moves = get_valid_moves(white_player);
-        if(moves.size() == 0){
+        return false;;
+    if(!(is_valid == DROP))  {
+        if(white_player)
+            move_piece_white(x_orig,y_orig,x_dest,y_dest);
+        else if(!white_player)
+            move_piece_black(x_orig,y_orig,x_dest,y_dest);
+        
+        if(is_valid == ORDINARY_MOVE){ //NORMAL MOVE
+            if((white_player && is_last_white(x_dest,y_dest)) || (!white_player && is_last_black(x_dest,y_dest))){
+                cout<<"merda   "<<white_player<<"   r: "<<is_last_white(x_dest,y_dest)<<"  x: "<<x_dest<<"   y: "<<y_dest<<endl;
+                dropPiece = 2;
+                if(white_player) remove_piece_white(x_dest,y_dest);
+                else if(!white_player) remove_piece_black(x_dest,y_dest);
+                vector<Move> moves = get_valid_moves(white_player);
+                if(moves.empty()){
+                    dropPiece = 0;
+                    current_player = !current_player;
+                    jumpingMove = -1;
+                    capturingMove = -1;
+                }
+            }else{
+                current_player = !current_player;
+                jumpingMove = -1;
+                capturingMove = -1;
+            }
+        }else if(is_valid == JUMPING_MOVE){ //JUMPING MOVE
+
+            /*if((white_player && is_last_white(x_dest,y_dest)) || (!white_player && is_last_black(x_dest,y_dest))){
+                dropPiece = 2;
+                if(white_player) remove_piece_white(x_dest,y_dest);
+                else if(!white_player) remove_piece_black(x_dest,y_dest);
+                vector<Move> moves = get_valid_moves(white_player);
+                if(moves.empty()){
+                    dropPiece = 0;
+                    current_player = !current_player;
+                    jumpingMove = -1;
+                    capturingMove = -1;
+                }
+            }else{*/
+                jumpingMove = y_dest * BOARD_SIZE + x_dest;
+                vector <Move> moves = get_valid_moves(white_player);
+                if(moves.size() == 0){
+                    current_player = !current_player;
+                    jumpingMove = -1;
+                    capturingMove = -1;
+                }
+            //}
+
+
+
+        }else if(is_valid == CAPTURE){ //CAPTURING
+            if(white_player) remove_piece_black((x_orig + x_dest)/2 , (y_orig + y_dest)/2);
+            else if(!white_player) remove_piece_white((x_orig + x_dest)/2 , (y_orig + y_dest)/2);
+
+
+            capturingMove = y_dest * BOARD_SIZE + x_dest; 
+            vector <Move> moves = get_valid_moves(white_player);
+            if(moves.empty()){
+
+                /*if((white_player && is_last_white(x_dest,y_dest)) || (!white_player && is_last_black(x_dest,y_dest))){
+                    dropPiece = 2;
+                    if(white_player) remove_piece_white(x_dest,y_dest);
+                    else if(!white_player) remove_piece_black(x_dest,y_dest);
+                    vector<Move> moves = get_valid_moves(white_player);
+                    if(moves.empty()){
+                        dropPiece = 0;
+                        current_player = !current_player;
+                        jumpingMove = -1;
+                        capturingMove = -1;
+                    }
+                }else{*/
+                    current_player = !current_player;
+                    jumpingMove = -1;
+                    capturingMove = -1;
+                //}
+            }
+        }
+    }else { // DROP PIECE
+        if(white_player) put_piece_white(x_dest, y_dest);
+        else if(!white_player) put_piece_black(x_dest, y_dest);
+        dropPiece--;
+        if (dropPiece > 0) {
+            vector <Move> moves = get_valid_moves(white_player);
+            if (moves.empty()) {
+                current_player = !current_player;
+                jumpingMove = -1;
+                capturingMove = -1;
+                dropPiece = 0;
+                cout<<"No place to drop pieces\n";
+            }
+        }
+        else {
             current_player = !current_player;
             jumpingMove = -1;
             capturingMove = -1;
+            dropPiece = 0;
         }
-    }else if(is_valid == CAPTURE){ //CAPTURING
-        if(white_player) remove_piece_black((x_orig + x_dest)/2 , (y_orig + y_dest)/2);
-        else if(!white_player) remove_piece_white((x_orig + x_dest)/2 , (y_orig + y_dest)/2);
-        capturingMove = y_dest * BOARD_SIZE + x_dest; 
-        vector <Move> moves = get_valid_moves(white_player);
-        if(moves.empty()){
-            current_player = !current_player;
-            jumpingMove = -1;
-            capturingMove = -1;
-        }
+
     }
+    
     return true;
 }
 
@@ -378,7 +460,15 @@ void Game::get_move(){
     int player;
     if(board.current_player) player = player1;
     else if(!board.current_player) player = player2;
-    cout<<"Player "<< (board.current_player ? 1 : 2) <<" turn.\n";
+    cout<<"Player "<< (board.current_player ? 1 : 2) <<" turn. ";
+    if(board.jumpingMove != -1)
+        cout<<"JUMPING \n";
+    else if(board.capturingMove != -1)
+        cout<<"CAPTURING \n";
+    else if(board.dropPiece != 0)
+        cout<<"DROP \n";
+    else cout<<"MOVE\n";
+
     if(player == 0){
         get_move_human();
     }else if(player == 1){
@@ -398,9 +488,12 @@ void Game::get_move_human(){
     }
     cout<<endl;
 
-    size_t x_orig,y_orig,x_dest,y_dest;
-    cout<<"Origin x: "; cin>>x_orig;
-    cout<<"Origin Y: "; cin>>y_orig;
+    size_t x_orig=0,y_orig=0,x_dest,y_dest;
+    if (board.dropPiece == 0) {
+        cout<<"Origin x: "; cin>>x_orig;
+        cout<<"Origin Y: "; cin>>y_orig;
+    }
+
     cout<<"Destination x: "; cin>>x_dest;
     cout<<"Destination Y: "; cin>>y_dest;
     bool move = make_move(x_orig,y_orig,x_dest,y_dest,board.current_player);
@@ -411,12 +504,16 @@ void Game::get_move_human(){
 void Game::get_move_ai1(){ //makes first move available
     vector<Move> moves = board.get_valid_moves(board.current_player);
     Move m = moves[0];
+    m.display();cout<<endl;
     make_move(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
 }
 
 void Game::get_move_ai2(){ //makes first move available
     Move m;
+    cout<<"Start minimax"<<endl;
     minimax.minimax(board,5,-INF,INF,1,m);
+    cout<<"End minimax"<<endl;
+    m.display();cout<<endl;
     make_move(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
 }
 
