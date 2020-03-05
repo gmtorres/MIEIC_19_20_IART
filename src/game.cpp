@@ -206,7 +206,9 @@ bool Board::move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest
     int is_valid = valid_move(x_orig,y_orig,x_dest,y_dest,white_player);
     if(is_valid == false)
         return false;;
-    if(white_player)
+
+    if(!(is_valid == DROP))  {
+        if(white_player)
         move_piece_white(x_orig,y_orig,x_dest,y_dest);
     else if(!white_player)
         move_piece_black(x_orig,y_orig,x_dest,y_dest);
@@ -236,6 +238,29 @@ bool Board::move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest
             capturingMove = -1;
         }
     }
+    
+    }
+
+    else {
+        if(white_player) put_piece_white(x_dest, y_dest);
+        else if(!white_player) put_piece_black(x_dest, y_dest);
+        dropPiece--;
+        if (dropPiece > 0) {
+            vector <Move> moves = get_valid_moves(white_player);
+            if (moves.empty()) {
+                current_player = !current_player;
+                jumpingMove = -1;
+                capturingMove = -1;
+            }
+        }
+        else {
+            current_player = !current_player;
+            jumpingMove = -1;
+            capturingMove = -1;
+        }
+
+    }
+    
     return true;
 }
 
@@ -380,9 +405,12 @@ void Game::get_move_human(){
     }
     cout<<endl;
 
-    size_t x_orig,y_orig,x_dest,y_dest;
-    cout<<"Origin x: "; cin>>x_orig;
-    cout<<"Origin Y: "; cin>>y_orig;
+    size_t x_orig=0,y_orig=0,x_dest,y_dest;
+    if (board.dropPiece == 0) {
+        cout<<"Origin x: "; cin>>x_orig;
+        cout<<"Origin Y: "; cin>>y_orig;
+    }
+
     cout<<"Destination x: "; cin>>x_dest;
     cout<<"Destination Y: "; cin>>y_dest;
     bool move = make_move(x_orig,y_orig,x_dest,y_dest,board.current_player);

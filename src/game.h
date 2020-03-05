@@ -7,6 +7,7 @@
 #define ORDINARY_MOVE 1
 #define JUMPING_MOVE 2
 #define CAPTURE 3
+#define DROP 4
 
 using namespace std;
 
@@ -34,6 +35,7 @@ public: //private:
     ulong board_black = 6717054L;
     int jumpingMove = -1; //-1 :  false, outro numero: posiçao da peça
     int capturingMove = -1; //-1 :  false, outro numero: posiçao da peça
+    int dropPiece = 0;
 
     float evaluate_board1();
     float evaluate_board2();
