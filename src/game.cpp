@@ -1,10 +1,24 @@
 #include "game.h"
 
+void Move::display(bool t=false){
+    cout<<x_orig<<","<<y_dest<<" ->"<<x_dest<<","<<y_dest;
+    if(t) cout<<"  "<< type;
+}
+
 Board::Board(){}
+Board::Board(const Board &old){
+    board_white = old.board_white;
+    board_black = old.board_black;
+    jumpingMove = old.jumpingMove;
+    capturingMove = old.capturingMove;
+    current_player = old.current_player;
+
+}
 
 void Board::get_valid_moves_aux(vector<Move> &moves, Move move, bool &capture, bool white_player){
     unsigned int r = valid_move_aux(move.x_orig, move.y_orig, move.x_dest, move.y_dest, white_player);
     move.type = r;
+    //move.display(true);cout<<endl;
     if(capture == true){
         if(r == CAPTURE)
             moves.push_back(move);
@@ -67,46 +81,81 @@ vector<Board> Board::get_valid_boards(bool white_player){
         Move m = *it;
         temp.move_piece(m.x_orig,m.y_orig,m.x_dest,m.y_dest,white_player);
         boards.push_back(temp);
-        temp.display();
+        //temp.display();
     }
 
     return boards;
 }
 
-float Board::eval(){
-    return 0;
+float Board::eval(){ // positive favours white, negative favours black
+    int pieces = 0;
+    ulong b1 = board_white, b2 = board_black;
+    while (b1 != 0 || b2 != 0){
+        pieces = pieces + (b1 & 1L) - (b2 & 1L);
+        b1 = b1 >> 1;
+        b2 = b2 >> 1; 
+    }
+    
+    return pieces;
 }
 
 bool Board::gameover(bool white_player){
-    return 0;
+    ulong board;
+    if(white_player) board = board_white;
+    else board = board_black;
+    if(board == 0)
+        return true;
+    vector<Move> moves = get_valid_moves(white_player);
+    if(moves.size() == 0){ //TODO:: only need to check if threr is one move possible, not all
+        //cout<<"No more possible moves for player"<<(current_player ? 1 : 2)<<endl;
+        return true;
+    }
+    return false;
 }
 
-bool Board::end_game(){
-    return gameover(0) || gameover(1);
+bool Board::end_game(bool white_player){
+    if(board_white == 0 || board_black == 0){
+        return true;
+    }
+    vector<Move> moves = get_valid_moves(white_player);
+    if(moves.size() == 0){ //TODO:: only need to check if threr is one move possible, not all
+        //cout<<"No more possible moves for player"<<(current_player ? 1 : 2)<<endl;
+        return true;
+    }
+    return false;
 }
 
 bool Board::get_piece_white(size_t pos){
     if(pos>=BOARD_SIZE*BOARD_SIZE)
-        return 0;
+        return false;
     return (board_white >> pos) & 1L;
 }
 bool Board::get_piece_white(size_t x, size_t y){
+    if(x>=BOARD_SIZE || y>=BOARD_SIZE)
+        return false;
     return get_piece_white(y*BOARD_SIZE + x);
 }
 bool Board::get_piece_black(size_t pos){
     if(pos>=BOARD_SIZE*BOARD_SIZE)
-        return 0;
+        return false;
     return (board_black >> pos) & 1L;
 }
 bool Board::get_piece_black(size_t x, size_t y){
+    if(x>=BOARD_SIZE || y>=BOARD_SIZE)
+        return false;
     return get_piece_black(y*BOARD_SIZE + x);
 }
 bool Board::is_piece(size_t pos){
     if(pos>=BOARD_SIZE*BOARD_SIZE)
-        return 0;
+        return false;
     return get_piece_white(pos) || get_piece_black(pos);
 }
 bool Board::is_piece(size_t x, size_t y){
+    if(x>=BOARD_SIZE || y>=BOARD_SIZE){
+        //cout<<x<<","<<y<<"  is piece nao passou"<<endl;
+        return false;
+    }
+    //cout<<x<<","<<y<<"  is piece passou"<<endl;
     return is_piece(y*BOARD_SIZE + x);
 }
 void Board::put_piece_white(size_t pos){
@@ -115,15 +164,19 @@ void Board::put_piece_white(size_t pos){
     board_white |= (1L << pos);
 }
 void Board::put_piece_white(size_t x, size_t y){
+    if(x>=BOARD_SIZE || y>=BOARD_SIZE)
+        return;
     put_piece_white(y*BOARD_SIZE + x);
 }
 bool Board::remove_piece_white(size_t pos){
     if(pos>=BOARD_SIZE*BOARD_SIZE || !get_piece_white(pos))
-        return 0;
+        return false;
     board_white = board_white & ~(1L << pos);
-    return 1;
+    return true;
 }
 bool Board::remove_piece_white(size_t x, size_t y){
+    if(x>=BOARD_SIZE || y>=BOARD_SIZE)
+        return false;
     return remove_piece_white(y*BOARD_SIZE + x);
 }
 void Board::put_piece_black(size_t pos){
@@ -132,22 +185,26 @@ void Board::put_piece_black(size_t pos){
     board_black |= (1L << pos);
 }
 void Board::put_piece_black(size_t x, size_t y){
+    if(x>=BOARD_SIZE || y>=BOARD_SIZE)
+        return;
     put_piece_black(y*BOARD_SIZE + x);
 }
 bool Board::remove_piece_black(size_t pos){
     if(pos>=BOARD_SIZE*BOARD_SIZE || !get_piece_black(pos))
-        return 0;
+        return false;
     board_black = board_black & ~(1L << pos);
-    return 1;
+    return true;
 }
 bool Board::remove_piece_black(size_t x, size_t y){
+    if(x>=BOARD_SIZE || y>=BOARD_SIZE)
+        return false;
     return remove_piece_black(y*BOARD_SIZE + x);
 }
 
 
 bool Board::move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player){
     int is_valid = valid_move(x_orig,y_orig,x_dest,y_dest,white_player);
-    if(!is_valid)
+    if(is_valid == false)
         return false;;
     if(white_player)
         move_piece_white(x_orig,y_orig,x_dest,y_dest);
@@ -161,10 +218,12 @@ bool Board::move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest
     }else if(is_valid == JUMPING_MOVE){ //JUMPING MOVE
         jumpingMove = y_dest * BOARD_SIZE + x_dest;
         vector <Move> moves = get_valid_moves(white_player);
-        if(moves.empty()){
+        if(moves.size() == 0){
             current_player = !current_player;
             jumpingMove = -1;
             capturingMove = -1;
+        }else{
+            //cout<<"Posso continuar a saltar"<<endl;
         }
     }else if(is_valid == CAPTURE){ //CAPTURING
         if(white_player) remove_piece_black((x_orig + x_dest)/2 , (y_orig + y_dest)/2);
@@ -208,20 +267,26 @@ unsigned int Board::valid_move(size_t x_orig, size_t y_orig,size_t x_dest, size_
 
 unsigned int Board::valid_move_aux(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player){
     
+    //não pode ser maior que o tabuleiro
+    if(x_dest >= BOARD_SIZE || y_dest >=BOARD_SIZE)
+        return false;
     //se nao houver peça daquele jogador na posição de origem
     if((white_player && !get_piece_white(x_orig,y_orig)) || (!white_player && !get_piece_black(x_orig,y_orig)))
         return false;
     //se houver peça na posição de destino,
+    //cout<<"entrou "<<x_dest<<","<<y_dest<<endl;
     if(is_piece(x_dest,y_dest)){
         return false;
     }
-
+    //cout<<"passou"<<endl;
     if(jumpingMove != -1){
-        if(int(y_orig*BOARD_SIZE+x_dest) != jumpingMove)
+        //cout<<"tenho que saltar "<<x_orig<<","<<y_orig<<"     "<<white_player<<endl;
+        if(int(y_orig*BOARD_SIZE+x_orig) != jumpingMove)
             return false;
+        //cout<<"passei"<<endl;
     }
     else if(capturingMove != -1){
-        if(int(y_orig*BOARD_SIZE+x_dest) != capturingMove)
+        if(int(y_orig*BOARD_SIZE+x_orig) != capturingMove)
             return false;
     }
 
@@ -283,6 +348,7 @@ void Board::display(){
 
 Game::Game(int player1Mode, int player2Mode) : player1(player1Mode) , player2(player2Mode){
     board = Board();
+    minimax = Minimax();
     cout<<"Board created"<<endl;
 }
 
@@ -294,20 +360,27 @@ void Game::get_move(){
     int player;
     if(board.current_player) player = player1;
     else if(!board.current_player) player = player2;
-
+    cout<<"Player "<< (board.current_player ? 1 : 2) <<" turn.\n";
     if(player == 0){
         get_move_human();
     }else if(player == 1){
         get_move_ai1();
-    }else{
-
+    }else if(player == 2){
+        get_move_ai2();
     }
 }
 
 //TODO: parse information based on letter and number, draw the board accordingly
 void Game::get_move_human(){
+    vector<Move> moves = board.get_valid_moves(board.current_player);
+    cout<<"Available moves (#="<<moves.size()<<"): ";
+    for(size_t i = 0; i < moves.size();++i){
+        Move m = moves[i];
+        cout<<m.x_orig<<","<<m.y_orig<<"->"<<m.x_dest<<","<<m.y_dest<<"   ";
+    }
+    cout<<endl;
+
     size_t x_orig,y_orig,x_dest,y_dest;
-    cout<<"Player "<< (board.current_player ? 1 : 2) <<" turn.\n";
     cout<<"Origin x: "; cin>>x_orig;
     cout<<"Origin Y: "; cin>>y_orig;
     cout<<"Destination x: "; cin>>x_dest;
@@ -318,9 +391,14 @@ void Game::get_move_human(){
 }
 
 void Game::get_move_ai1(){ //makes first move available
-    cout<<"Player "<< (board.current_player ? 1 : 2) <<" turn.\n";
     vector<Move> moves = board.get_valid_moves(board.current_player);
     Move m = moves[0];
+    make_move(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
+}
+
+void Game::get_move_ai2(){ //makes first move available
+    Move m;
+    minimax.minimax(board,5,-INF,INF,1,m);
     make_move(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
 }
 
@@ -329,7 +407,21 @@ void Game::game_loop(){
     display(); 
 
     while (true)
-    {
+    {   
+            /*cout<<board.board_white<<endl;
+            cout<<board.board_black<<endl;
+            cout<<board.current_player<<endl;
+            cout<<board.jumpingMove<<endl;
+            cout<<board.capturingMove<<endl;*/
+        if(board.end_game(board.current_player)){
+            cout<<"END OF GAME  ----- PLAYER "<<(!board.current_player ? 1 : 2)<<" WON"<<endl;
+            cout<<board.board_white<<endl;
+            cout<<board.board_black<<endl;
+            cout<<board.current_player<<endl;
+            cout<<board.jumpingMove<<endl;
+            cout<<board.capturingMove<<endl;
+            break;
+        }
         get_move();
         display(); 
     }
@@ -351,18 +443,34 @@ Minimax::Minimax(){
 
 }
 
-float Minimax::minimax(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer,bool white_player){
-    if(depth == 0 || board.end_game())
+float Minimax::minimax(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer, Move &move){
+    //cout<<"Minimax: Depth:"<<depth<<"   alpha  "<<alpha<<"   beta  "<<beta<<"   player  "<<board.current_player<<endl;
+    
+    if(depth == 0 || board.end_game(board.current_player))
         return board.eval();
 
-    vector<Board> nextBoards = board.get_valid_boards(white_player);
-    auto nextBoardsEnd = nextBoards.end();
+    //vector<Board> nextBoards = board.get_valid_boards(board.current_player);
+    vector<Move> nextBoards = board.get_valid_moves(board.current_player);
     
-    if(maximizingPlayer){
+    Move temp_move = Move(0,0,0,0);
+
+    auto nextBoardsEnd = nextBoards.end();
+    if(maximizingPlayer == board.current_player){
         float maxEval = -INF;
         for(auto it = nextBoards.begin(); it != nextBoardsEnd; ++it){
-            float eval = minimax(*it, depth-1, alpha, beta, false, !white_player);
-            maxEval = (maxEval > eval) ? maxEval : eval;
+            //float eval = minimax(*it, depth-1, alpha, beta, maximizingPlayer);
+            
+            Board temp = Board(board);
+            Move m = *it;
+            temp.move_piece(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
+            float eval = minimax(temp, depth-1, alpha, beta, maximizingPlayer,temp_move);
+
+
+            //maxEval = (maxEval > eval) ? maxEval : eval;
+            if(maxEval < eval){
+                maxEval = eval;
+                move = m;
+            }
             alpha = (alpha > eval) ? alpha : eval;
             if(beta <= alpha)
                 break;
@@ -372,8 +480,19 @@ float Minimax::minimax(Board board, unsigned short depth, float alpha, float bet
     else{
         float minEval = INF;
         for(auto it = nextBoards.begin(); it != nextBoardsEnd; ++it){
-            float eval = minimax(*it, depth-1, alpha, beta, true, !white_player);
-            minEval = (minEval < eval) ? minEval : eval;
+            //float eval = minimax(*it, depth-1, alpha, beta, maximizingPlayer);
+
+            Board temp = Board(board);            
+            Move m = *it;
+            temp.move_piece(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
+            float eval = minimax(temp, depth-1, alpha, beta, maximizingPlayer,temp_move);
+
+
+            //minEval = (minEval < eval) ? minEval : eval;
+            if(minEval > eval){
+                minEval = eval;
+                move = m;
+            }
             beta = (beta < eval) ? beta : eval;
             if(beta <= alpha)
                 break;

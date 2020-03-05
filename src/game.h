@@ -16,19 +16,24 @@ public:
     size_t y_orig;
     size_t x_dest;
     size_t y_dest;
-    unsigned int type;
+    unsigned int type = 0;
+    Move(): x_orig(0), y_orig(0), x_dest(0), y_dest(0) {};
     Move(size_t x_o,size_t y_o,size_t x_d,size_t y_d) : x_orig(x_o), y_orig(y_o), x_dest(x_d), y_dest(y_d) {};
+
+    void display(bool t);
 };
 
 
 class Board{
 
-private:
+public: //private:
 
+    //ulong board_white = 9110782265213845505;
+    //ulong board_black = 33552384;
     ulong board_white = 9114834846030495744L;
     ulong board_black = 6717054L;
-    signed char jumpingMove = -1; //-1 :  false, outro numero: posiçao da peça
-    signed char capturingMove = -1; //-1 :  false, outro numero: posiçao da peça
+    int jumpingMove = -1; //-1 :  false, outro numero: posiçao da peça
+    int capturingMove = -1; //-1 :  false, outro numero: posiçao da peça
 
     float evaluate_board1();
     float evaluate_board2();
@@ -65,6 +70,7 @@ public:
     bool current_player = 1;
 
     Board();
+    Board(const Board &old);
 
     bool move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
     
@@ -72,45 +78,13 @@ public:
     vector <Board> get_valid_boards(bool white_player);
 
     bool gameover(bool white_player);
-    bool end_game();
+    bool end_game(bool white_player);
 
     float eval();
 
     void display();
 
 };
-
-class Game{
-
-private:
-
-    //bool white_player = 1; //player white or black, player 1 or 2
-    int player1 , player2; // 0 - Human;    1 - CPU level 1;    2 - CPU level 2;    3 - CPU level 3;    diferent minimax aproaches, depth, prunning, optimizations
-
-    int movement_phase; // for moves that is needed more than one phase, placing two pieces, deciding where to eat next, and so on
-
-    unsigned int move_count;
-
-
-    void find_best_move();
-
-public:
-
-    Board board;
-
-    Game(int player1Mode, int player2Mode);
-
-    void get_move();
-    void get_move_human();
-    void get_move_ai1();
-    bool make_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
-
-    void game_loop();
-
-    void display();    
-
-};
-
 
 /**
  * @brief Minimax class, to calculate de best move for a given board
@@ -123,6 +97,39 @@ public:
 
     Minimax();
 
-    float minimax(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer, bool white_player);
+    float minimax(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer,Move &move);
 
 };
+
+class Game{
+
+private:
+
+    //bool white_player = 1; //player white or black, player 1 or 2
+    int player1 , player2; // 0 - Human;    1 - CPU level 1;    2 - CPU level 2;    3 - CPU level 3;    diferent minimax aproaches, depth, prunning, optimizations
+
+    //int movement_phase; // for moves that is needed more than one phase, placing two pieces, deciding where to eat next, and so on
+
+    //unsigned int move_count;
+
+    void find_best_move();
+
+public:
+
+    Board board;
+    Minimax minimax;
+
+    Game(int player1Mode, int player2Mode);
+
+    void get_move();
+    void get_move_human();
+    void get_move_ai1();
+    void get_move_ai2();
+    bool make_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
+
+    void game_loop();
+
+    void display();    
+
+};
+
