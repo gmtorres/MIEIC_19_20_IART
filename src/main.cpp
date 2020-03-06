@@ -8,7 +8,7 @@ int main(void){
 
     cout<<"Ola"<<endl;
 
-    Game game = Game(2,1);
+    Game game = Game(3,2);
 
     //game.board.get_valid_boards(1);
 

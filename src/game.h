@@ -23,7 +23,7 @@ public:
 
     void display(bool t);
 };
-
+ 
 
 class Board{
 
@@ -31,7 +31,9 @@ public: //private:
 
     //ulong board_white = 9110782265213845505;
     //ulong board_black = 33552384;
-    ulong board_white = 9114834846030495744L;
+    //ulong board_white = 9114834846030495744L;
+    ulong board_white = 9097946347427856640L;
+
     ulong board_black = 6717054L;
     int jumpingMove = -1; //-1 :  false, outro numero: posiçao da peça
     int capturingMove = -1; //-1 :  false, outro numero: posiçao da peça
@@ -105,7 +107,7 @@ public:
 
     Minimax();
 
-    float minimax(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer,Move &move);
+    float minimax(Board board, unsigned short depth, float &alpha, float &beta, bool maximizingPlayer,Move &move);
 
 };
 
@@ -133,6 +135,7 @@ public:
     void get_move_human();
     void get_move_ai1();
     void get_move_ai2();
+    void get_move_ai3();
     bool make_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
 
     void game_loop();
