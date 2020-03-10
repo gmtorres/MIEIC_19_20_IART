@@ -1,5 +1,16 @@
 #include "game.h"
 
+size_t count_set_bit(ulong n){
+    int t = 0;
+
+    while(n != 0){
+        t += (n & 1L);
+        n = n >> 1;
+    }
+
+    return t;
+}
+
 void Move::display(bool t=false){
     cout<<x_orig<<","<<y_orig<<" ->"<<x_dest<<","<<y_dest;
     if(t) cout<<"  "<< type;
@@ -89,28 +100,50 @@ vector<Board> Board::get_valid_boards(bool white_player){
     vector<Board> boards = vector<Board> ();
     for(auto it = moves.begin(); it != moves.end(); ++it){
         Board temp = *this;
-        Move m = *it;
+        Move m = Move(*it);
         temp.move_piece(m.x_orig,m.y_orig,m.x_dest,m.y_dest,white_player);
+        temp.last_move = Move(0,1,2,3);;
         boards.push_back(temp);
-        //temp.display();
     }
 
     return boards;
 }
 
 float Board::eval(){ // positive favours white, negative favours black
-    int pieces = 0;
+
+    /*if(gameover(0))
+        return 1000;
+    else if(gameover(1))
+        return -1000;*/
+
+    float score = 0;
+
     ulong b1 = board_white, b2 = board_black;
     while (b1 != 0 || b2 != 0){
-        pieces = pieces + (b1 & 1L) - (b2 & 1L);
+        score = score + (b1 & 1L) - (b2 & 1L);
         b1 = b1 >> 1;
         b2 = b2 >> 1; 
     }
-    
-    return pieces;
+
+    //if(board_white & 0xFF00L) score += 4;
+    //if(board_black & 0xFF000000000000L) score -= 4;
+    //if(board_white & 0xFF00000000000000L) score += 2;
+    //if(board_white & 0xFFL) score -= 2;
+
+    score += 1.5*count_set_bit(board_white & 0xFF00); // bits na penultima fila para ser convertidos
+    score -= 1.5*count_set_bit(board_black & 0xFF000000000000L); // bits na penultima fila para seer convertidos
+    score += 1.2*count_set_bit(board_white & 0xFF00000000000000L); // bits na primeira fila a proteger
+    score -= 1.2*count_set_bit(board_black & 0xFFL); // bits na primeira fila a proteger
+    score += 1.08*count_set_bit(board_white & 0x3C3C000000L); //board center
+    score -= 1.08*count_set_bit(board_black & 0x3C3C000000L); //board center
+    score += 1.125*count_set_bit(board_white & 0x8181818181818181); // board sides
+    score -= 1.125*count_set_bit(board_black & 0x8181818181818181); //board sides
+
+
+    return score;
 }
 
-bool Board::gameover(bool white_player){
+bool Board::gameover(bool white_player){ // check if a player has lost the game
     ulong board;
     if(white_player) board = board_white;
     else board = board_black;
@@ -231,7 +264,7 @@ bool Board::is_drop_zone_black(size_t x, size_t y){
 bool Board::move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player){
     int is_valid = valid_move(x_orig,y_orig,x_dest,y_dest,white_player);
     if(is_valid == false)
-        return false;;
+        return false;
     if(!(is_valid == DROP))  {
         if(white_player)
             move_piece_white(x_orig,y_orig,x_dest,y_dest);
@@ -331,6 +364,7 @@ bool Board::move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest
         }
 
     }
+    //last_move = Move(x_orig,y_orig,x_dest,y_dest);
     
     return true;
 }
@@ -515,7 +549,7 @@ void Game::get_move_ai2(){ //makes first move available
     Move m;
     cout<<"Start minimax"<<endl;
     float alpha = -INF, beta = INF;
-    minimax.minimax(board,3,alpha,beta,1,m);
+    cout<<"EVAL: \n"<<minimax.minimax(board,3,alpha,beta,1,m)<<endl;
     cout<<"End minimax"<<endl;
     m.display();cout<<endl;
     make_move(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
@@ -525,7 +559,7 @@ void Game::get_move_ai3(){ //makes first move available
     Move m;
     cout<<"Start minimax"<<endl;
     float alpha = -INF, beta = INF;
-    minimax.minimax(board,20,alpha,beta,1,m);
+    cout<<"EVAL: \n"<<minimax.minimax(board,5,alpha,beta,1,m)<<endl;
     cout<<"End minimax"<<endl;
     m.display();cout<<endl;
     make_move(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
@@ -564,18 +598,28 @@ void Game::display(){
 /*-------------------- MINIMAX --------------------*/
 
 
+int compareBoard(const void * b1, const void * b2 ){
+    float v1 = (*(Board*)b1).eval();
+    float v2 = (*(Board*)b2).eval();
+    if( v1 < v2 ) return -1;
+    if( v1 > v2 ) return 1;
+    if( v1 == v2 ) return 0;
+    return 0;
+}
+
+
 Minimax::Minimax(){
 
 }
 
-float Minimax::minimax(Board board, unsigned short depth, float &alpha, float &beta, bool maximizingPlayer, Move &move){
-    cout<<"Minimax: Depth:"<<depth<<"   alpha  "<<alpha<<"   beta  "<<beta<<"   player  "<<board.current_player<<endl;
+float Minimax::minimax(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer, Move &move){
+    //cout<<"Minimax: Depth:"<<depth<<"   alpha  "<<alpha<<"   beta  "<<beta<<"   player  "<<board.current_player<<endl;
     
     if(depth == 0 || board.end_game(board.current_player))
         return board.eval();
 
-    //vector<Board> nextBoards = board.get_valid_boards(board.current_player);
-    vector<Move> nextBoards = board.get_valid_moves(board.current_player);
+    vector<Board> nextBoards = board.get_valid_boards(board.current_player);
+    //vector<Move> nextBoards = board.get_valid_moves(board.current_player);
     
     Move temp_move = Move(0,0,0,0);
 
@@ -585,16 +629,19 @@ float Minimax::minimax(Board board, unsigned short depth, float &alpha, float &b
         for(auto it = nextBoards.begin(); it != nextBoardsEnd; ++it){
             //float eval = minimax(*it, depth-1, alpha, beta, maximizingPlayer);
             
-            Board temp = Board(board);
-            Move m = *it;
-            temp.move_piece(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
-            float eval = minimax(temp, depth-1, alpha, beta, maximizingPlayer,temp_move);
-
+            //Board temp_board = Board(board);
+            //Move m = *it;
+            //temp_board.move_piece(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
+            //float eval = minimax(temp_board, depth-1, alpha, beta, maximizingPlayer,temp_move);
+            float eval = minimax(*it, depth-1, alpha, beta, maximizingPlayer,temp_move);
+            //cout<<eval<<endl;
 
             //maxEval = (maxEval > eval) ? maxEval : eval;
             if(maxEval < eval){
                 maxEval = eval;
-                move = m;
+                //move = m;
+                move = (*it).last_move;
+                (*it).last_move.display();
             }
             alpha = (alpha > eval) ? alpha : eval;
             if(beta <= alpha)
@@ -607,16 +654,19 @@ float Minimax::minimax(Board board, unsigned short depth, float &alpha, float &b
         for(auto it = nextBoards.begin(); it != nextBoardsEnd; ++it){
             //float eval = minimax(*it, depth-1, alpha, beta, maximizingPlayer);
 
-            Board temp = Board(board);            
-            Move m = *it;
-            temp.move_piece(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
-            float eval = minimax(temp, depth-1, alpha, beta, maximizingPlayer,temp_move);
+            //Board temp_board = Board(board);            
+            //Move m = *it;
+            //temp_board.move_piece(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
+            //float eval = minimax(temp_board, depth-1, alpha, beta, maximizingPlayer,temp_move);
+            float eval = minimax(*it, depth-1, alpha, beta, maximizingPlayer,temp_move);
+            //cout<<eval<<endl;
 
 
             //minEval = (minEval < eval) ? minEval : eval;
             if(minEval > eval){
                 minEval = eval;
-                move = m;
+                move = (*it).last_move;
+                (*it).last_move.display();
             }
             beta = (beta < eval) ? beta : eval;
             if(beta <= alpha)

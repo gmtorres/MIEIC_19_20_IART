@@ -20,6 +20,7 @@ public:
     unsigned int type = 0;
     Move(): x_orig(0), y_orig(0), x_dest(0), y_dest(0) {};
     Move(size_t x_o,size_t y_o,size_t x_d,size_t y_d) : x_orig(x_o), y_orig(y_o), x_dest(x_d), y_dest(y_d) {};
+    Move(const Move &m) : x_orig(m.x_orig), y_orig(m.y_orig), x_dest(m.x_dest), y_dest(m.y_dest) {};
 
     void display(bool t);
 };
@@ -31,13 +32,14 @@ public: //private:
 
     //ulong board_white = 9110782265213845505;
     //ulong board_black = 33552384;
-    //ulong board_white = 9114834846030495744L;
-    ulong board_white = 9097946347427856640L;
+    ulong board_white = 9114834846030495744L;
+    //ulong board_white = 9097946347427856640L;
 
     ulong board_black = 6717054L;
     int jumpingMove = -1; //-1 :  false, outro numero: posiçao da peça
     int capturingMove = -1; //-1 :  false, outro numero: posiçao da peça
     int dropPiece = 0;
+    Move last_move;
 
     float evaluate_board1();
     float evaluate_board2();
@@ -107,7 +109,7 @@ public:
 
     Minimax();
 
-    float minimax(Board board, unsigned short depth, float &alpha, float &beta, bool maximizingPlayer,Move &move);
+    float minimax(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer,Move &move);
 
 };
 
