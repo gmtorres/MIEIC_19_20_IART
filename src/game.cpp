@@ -23,6 +23,13 @@ void Move::set_vars(size_t x_o,size_t y_o,size_t x_d,size_t y_d){
     y_dest = y_d;
 }
 
+bool Move::operator==(Move const &m2){
+    if(this->x_orig == m2.x_orig && this->y_orig == m2.y_orig && this->x_dest == m2.x_dest && this->y_dest== m2.y_dest)
+        return true;
+    return false;
+}
+
+
 Board::Board(){}
 Board::Board(const Board &old){
     board_white = old.board_white;
@@ -34,72 +41,7 @@ Board::Board(const Board &old){
     last_move = old.last_move;
 }
 
-void Board::get_valid_moves_aux(vector<Move> &moves, Move move, bool &capture, bool white_player){
-    unsigned int r = valid_move_aux(move.x_orig, move.y_orig, move.x_dest, move.y_dest, white_player);
-    move.type = r;
-    if(capture == true){
-        if(r == CAPTURE)
-            moves.push_back(move);
-    }else if(capture == false){
-        if(r == CAPTURE){
-            capture = true;
-            moves = vector<Move>();
-            moves.push_back(move);
-        }else if(r){
-            moves.push_back(move);
-        }
-    }
-}
 
-vector<Move> Board::get_valid_moves(bool white_player){
-    vector<Move> moves = vector<Move>();
-    ulong board;
-    if(white_player) board = board_white;
-    else if(!white_player) board = board_black;
-
-    bool capture_possible = false;
-
-    if(dropPiece == 0){
-        size_t pos = 0;
-        while(board != 0){
-            bool piece = board & 1L;
-            if(piece){
-                size_t x = pos%BOARD_SIZE;
-                size_t y = pos/BOARD_SIZE;
-                if(white_player){
-                    get_valid_moves_aux(moves,Move(x,y,x-2,y),capture_possible,true);
-                    get_valid_moves_aux(moves,Move(x,y,x-2,y-2),capture_possible,true);
-                    get_valid_moves_aux(moves,Move(x,y,x-1,y-1),capture_possible,true);
-                    get_valid_moves_aux(moves,Move(x,y,x,y-1),capture_possible,true);
-                    get_valid_moves_aux(moves,Move(x,y,x,y-2),capture_possible,true);
-                    get_valid_moves_aux(moves,Move(x,y,x+1,y-1),capture_possible,true);
-                    get_valid_moves_aux(moves,Move(x,y,x+2,y-2),capture_possible,true);
-                    get_valid_moves_aux(moves,Move(x,y,x+2,y),capture_possible,true);
-                }else if(!white_player){
-                    get_valid_moves_aux(moves,Move(x,y,x-2,y),capture_possible,false);
-                    get_valid_moves_aux(moves,Move(x,y,x-2,y+2),capture_possible,false);
-                    get_valid_moves_aux(moves,Move(x,y,x-1,y+1),capture_possible,false);
-                    get_valid_moves_aux(moves,Move(x,y,x,y+1),capture_possible,false);
-                    get_valid_moves_aux(moves,Move(x,y,x,y+2),capture_possible,false);
-                    get_valid_moves_aux(moves,Move(x,y,x+1,y+1),capture_possible,false);
-                    get_valid_moves_aux(moves,Move(x,y,x+2,y+2),capture_possible,false);
-                    get_valid_moves_aux(moves,Move(x,y,x+2,y),capture_possible,false);
-                }
-            }
-            ++pos;
-            board = board >> 1;
-        }
-    }else{
-        for(size_t y = 0; y < 2; ++y){
-            for(size_t x = 1; x < BOARD_SIZE; ++x){
-                if(white_player) get_valid_moves_aux(moves,Move(0,0,x, y + 6),capture_possible,true);
-                if(!white_player) get_valid_moves_aux(moves,Move(0,0,x, y),capture_possible,false);
-                
-            }
-        }
-    }
-    return moves;
-}
 
 vector<Board> Board::get_valid_boards(bool white_player){
     vector<Move> moves = get_valid_moves(white_player);
@@ -107,7 +49,7 @@ vector<Board> Board::get_valid_boards(bool white_player){
     for(auto it = moves.begin(); it != moves.end(); ++it){
         Board temp = *this;
         Move m = *it;
-        temp.move_piece(m.x_orig,m.y_orig,m.x_dest,m.y_dest,white_player,m.type);
+        temp.move_piece(m,white_player,m.type);
         temp.last_move.set_vars(m.x_orig,m.y_orig,m.x_dest,m.y_dest);
         boards.push_back(temp);
 
@@ -170,6 +112,312 @@ bool Board::end_game(bool white_player){
     }
     return false;
 }
+
+unsigned int Board::valid_move(Move move, bool white_player){
+    vector<Move> moves = get_valid_moves(white_player);
+    for(auto it = moves.begin(); it != moves.end();++it){
+        Move m = *it;
+        if(move == m)
+            return m.type;
+    }
+    return 0;
+}
+
+
+void Board::get_valid_moves_aux(vector<Move> &moves, Move move, bool &capture, bool white_player){
+    int r = valid_move_aux(move, white_player);
+    move.type = r;
+    if(capture == true){
+        if(r == CAPTURE)
+            moves.push_back(move);
+    }else if(capture == false){
+        if(r == CAPTURE){
+            capture = true;
+            moves = vector<Move>();
+            moves.push_back(move);
+        }else if(r){
+            moves.push_back(move);
+        }
+    }
+}
+
+bool Board::any_move_available(bool white_player){
+    ulong board;
+    if(white_player) board = board_white;
+    else if(!white_player) board = board_black;
+
+    if(dropPiece == 0){
+        size_t x = 0;
+        size_t y = 0;
+        while(board != 0){
+            if(board & 1L){
+                
+                if(white_player){
+                    if(valid_move_aux(Move(x,y,x-2,y),true)) return true;
+                    if(valid_move_aux(Move(x,y,x-2,y-2),true)) return true;
+                    if(valid_move_aux(Move(x,y,x-1,y-1),true)) return true;
+                    if(valid_move_aux(Move(x,y,x,y-1),true)) return true;
+                    if(valid_move_aux(Move(x,y,x,y-2),true)) return true;
+                    if(valid_move_aux(Move(x,y,x+1,y-1),true)) return true;
+                    if(valid_move_aux(Move(x,y,x+2,y-2),true)) return true;
+                    if(valid_move_aux(Move(x,y,x+2,y),true)) return true;
+                }else if(!white_player){
+                    if(valid_move_aux(Move(x,y,x-2,y),false)) return true;
+                    if(valid_move_aux(Move(x,y,x-2,y+2),false)) return true;
+                    if(valid_move_aux(Move(x,y,x-1,y+1),false)) return true;
+                    if(valid_move_aux(Move(x,y,x,y+1),false)) return true;
+                    if(valid_move_aux(Move(x,y,x,y+2),false)) return true;
+                    if(valid_move_aux(Move(x,y,x+1,y+1),false)) return true;
+                    if(valid_move_aux(Move(x,y,x+2,y+2),false)) return true;
+                    if(valid_move_aux(Move(x,y,x+2,y),false)) return true;
+                }
+            }
+            ++x;
+            if(x == BOARD_SIZE){
+                x = 0;
+                ++y;
+            }
+            board = board >> 1;
+        }
+    }else{
+        for(size_t y = 0; y < 2; ++y){
+            for(size_t x = 1; x < BOARD_SIZE; ++x){
+                if(white_player) if(valid_move_aux(Move(0,0,x, y + 6),true)) return true;
+                if(!white_player) if(valid_move_aux(Move(0,0,x, y),false)) return true;
+                
+            }
+        }
+    }
+    return false;
+}
+
+vector<Move> Board::get_valid_moves(bool white_player){
+    vector<Move> moves = vector<Move>();
+
+    ulong board;
+    if(white_player) board = board_white;
+    else if(!white_player) board = board_black;
+
+    bool capture_possible = false;
+
+    if(dropPiece == 0){
+        size_t x = 0;
+        size_t y = 0;
+        while(board != 0){
+            if(board & 1L){
+                
+                if(white_player){
+                    get_valid_moves_aux(moves,Move(x,y,x-2,y),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x-2,y-2),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x-1,y-1),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x,y-1),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x,y-2),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x+1,y-1),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x+2,y-2),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x+2,y),capture_possible,true);
+                }else if(!white_player){
+                    get_valid_moves_aux(moves,Move(x,y,x-2,y),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x-2,y+2),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x-1,y+1),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x,y+1),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x,y+2),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x+1,y+1),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x+2,y+2),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x+2,y),capture_possible,false);
+                }
+            }
+            ++x;
+            if(x == BOARD_SIZE){
+                x = 0;
+                ++y;
+            }
+            board = board >> 1;
+        }
+    }else{
+        for(size_t y = 0; y < 2; ++y){
+            for(size_t x = 1; x < BOARD_SIZE; ++x){
+                if(white_player) get_valid_moves_aux(moves,Move(0,0,x, y + 6),capture_possible,true);
+                if(!white_player) get_valid_moves_aux(moves,Move(0,0,x, y),capture_possible,false);
+                
+            }
+        }
+    }
+    return moves;
+}
+
+//check if a move is valid, not caring if there is capturing moves possible
+unsigned int Board::valid_move_aux(const Move &move, bool white_player){
+    if(move.x_dest >= BOARD_SIZE || move.y_dest >=BOARD_SIZE)
+        return false;
+    size_t pos_orig = move.y_orig * BOARD_SIZE + move.x_orig;
+    size_t pos_dest = move.y_dest * BOARD_SIZE + move.x_dest;
+
+    ulong occupied = board_white | board_black;
+    
+    if( (white_player && !(board_white & (1L << pos_orig))) || (!white_player && !(board_black & (1L << pos_orig))) )
+        return false;
+
+    if(occupied & (1L << pos_dest))
+        return false;
+    
+    if(!dropPiece){
+
+        if(jumpingMove != -1 && jumpingMove != int(pos_orig))
+            return false;
+        if(capturingMove != -1 && capturingMove != int(pos_orig))
+            return false;
+
+        int delta_x = move.x_dest - move.x_orig;
+        int delta_y = move.y_dest - move.y_orig;
+
+        if((delta_x == -1 || delta_x == 0 || delta_x == 1) && jumpingMove == -1 && capturingMove == -1){
+            if(white_player && delta_y == -1)
+                return ORDINARY_MOVE;
+            if(!white_player && delta_y == 1)
+                return ORDINARY_MOVE;
+        }
+        if(delta_x == -2 || delta_x == 0 || delta_x == 2){
+            if(white_player && (delta_y == -2 || delta_y == 0)){
+                if(board_black & (1L << ((move.y_orig + (delta_y >> 1)) * BOARD_SIZE + (move.x_orig + (delta_x >> 1)))) && jumpingMove == -1)
+                    return CAPTURE;
+                if(delta_y == -2 && board_white & (1L << ((move.y_orig - 1) * BOARD_SIZE + (move.x_orig + (delta_x >> 1)))) && capturingMove == -1)
+                    return JUMPING_MOVE;
+            }
+            if(!white_player && (delta_y == 2 || delta_y == 0)){
+                if(board_white & (1L << ((move.y_orig + (delta_y >> 1)) * BOARD_SIZE + (move.x_orig + (delta_x >> 1))))  && jumpingMove == -1)
+                    return CAPTURE;
+                if(delta_y == 2 && board_black & (1L << ((move.y_orig + 1) * BOARD_SIZE + (move.x_orig + (delta_x >> 1))))  && capturingMove == -1)
+                    return JUMPING_MOVE;
+            }
+        }
+    }else{
+        if(white_player && is_drop_zone_white(move.x_dest,move.y_dest))
+            return DROP;
+        if(!white_player && is_drop_zone_black(move.x_dest,move.y_dest))
+            return DROP;
+    }
+
+    return false;
+}
+
+
+bool Board::move_piece(const Move &move, bool white_player, int valid){
+    
+    int type;
+    if(valid == 0){
+        type = valid_move_aux(move,white_player);
+        if(type == false)
+            return false;
+    }else
+        type = move.type;
+
+    if(type != DROP){
+        if(white_player)
+            move_piece_white(move.x_orig,move.y_orig,move.x_dest,move.y_dest);
+        else if(!white_player)
+            move_piece_black(move.x_orig,move.y_orig,move.x_dest,move.y_dest);
+    }
+    
+    switch (type){
+        case ORDINARY_MOVE:
+
+            if((white_player && is_last_white(move.x_dest,move.y_dest)) || (!white_player && is_last_black(move.x_dest,move.y_dest))){
+                dropPiece = 2;
+                if(white_player) remove_piece_white(move.x_dest,move.y_dest);
+                else if(!white_player) remove_piece_black(move.x_dest,move.y_dest);
+                if(!any_move_available(white_player)){
+                    dropPiece = 0;
+                    current_player = !current_player;
+                }
+            }else
+                current_player = !current_player;
+            
+            break;
+
+        case JUMPING_MOVE:
+            if((white_player && is_last_white(move.x_dest,move.y_dest)) || (!white_player && is_last_black(move.x_dest,move.y_dest))){
+                dropPiece = 2;
+                if(white_player) remove_piece_white(move.x_dest,move.y_dest);
+                else if(!white_player) remove_piece_black(move.x_dest,move.y_dest);
+                if(!any_move_available(white_player)){
+                    dropPiece = 0;
+                    current_player = !current_player;
+                }
+            }else{
+                jumpingMove = move.y_dest * BOARD_SIZE + move.x_dest;
+                if(!any_move_available(white_player)){
+                    current_player = !current_player;
+                    jumpingMove = -1;
+                }
+            }
+            break;
+
+        case CAPTURE:
+            if(white_player) remove_piece_black((move.x_orig + move.x_dest)/2 , (move.y_orig + move.y_dest)/2);
+            else if(!white_player) remove_piece_white((move.x_orig + move.x_dest)/2 , (move.y_orig + move.y_dest)/2);
+            capturingMove = move.y_dest * BOARD_SIZE + move.x_dest;
+            if(!any_move_available(white_player)){
+                capturingMove = -1;
+                if((white_player && is_last_white(move.x_dest,move.y_dest)) || (!white_player && is_last_black(move.x_dest,move.y_dest))){
+                    dropPiece = 2;
+                    if(white_player) remove_piece_white(move.x_dest,move.y_dest);
+                    else if(!white_player) remove_piece_black(move.x_dest,move.y_dest);
+                    if(!any_move_available(white_player)){
+                        dropPiece = 0;
+                        current_player = !current_player;
+                    }
+                }else{
+                    current_player = !current_player;
+                }
+
+            }
+            break;
+
+        case DROP:
+            if(white_player) put_piece_white(move.x_dest, move.y_dest);
+            else if(!white_player) put_piece_black(move.x_dest, move.y_dest);
+            dropPiece--;
+            if( (dropPiece <= 0) || (dropPiece > 0 && !any_move_available(white_player))){
+                current_player = !current_player;
+                dropPiece = 0;
+            }
+
+            break;
+
+        default:
+            break;
+    }
+
+    
+    return true;
+}
+
+
+
+
+
+
+
+
+
+
+
+void Board::move_piece_white(size_t pos_orig, size_t pos_dest){
+    if(remove_piece_white(pos_orig))
+        put_piece_white(pos_dest);
+}
+void Board::move_piece_black(size_t pos_orig, size_t pos_dest){
+    if(remove_piece_black(pos_orig))
+        put_piece_black(pos_dest);
+}
+void Board::move_piece_white(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest){
+    move_piece_white(y_orig*BOARD_SIZE+x_orig, y_dest*BOARD_SIZE+x_dest);
+}
+void Board::move_piece_black(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest){
+    move_piece_black(y_orig*BOARD_SIZE+x_orig, y_dest*BOARD_SIZE+x_dest);
+}
+
+
 
 bool Board::get_piece_white(size_t pos){
     if(pos>=BOARD_SIZE*BOARD_SIZE)
@@ -261,204 +509,8 @@ bool Board::is_drop_zone_black(size_t x, size_t y){
 }
 
 
-bool Board::move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player, int valid = 0){
-    int is_valid;
-    if(valid == 0)
-        is_valid = valid_move(x_orig,y_orig,x_dest,y_dest,white_player);
-    else 
-        is_valid = valid;
-    if(is_valid == false)
-        return false;
-    if(!(is_valid == DROP))  {
-        if(white_player)
-            move_piece_white(x_orig,y_orig,x_dest,y_dest);
-        else if(!white_player)
-            move_piece_black(x_orig,y_orig,x_dest,y_dest);
-        
-        if(is_valid == ORDINARY_MOVE){ //NORMAL MOVE
-            if((white_player && is_last_white(x_dest,y_dest)) || (!white_player && is_last_black(x_dest,y_dest))){
-                dropPiece = 2;
-                if(white_player) remove_piece_white(x_dest,y_dest);
-                else if(!white_player) remove_piece_black(x_dest,y_dest);
-                vector<Move> moves = get_valid_moves(white_player);
-                if(moves.empty()){
-                    dropPiece = 0;
-                    current_player = !current_player;
-                    jumpingMove = -1;
-                    capturingMove = -1;
-                }
-            }else{
-                current_player = !current_player;
-                jumpingMove = -1;
-                capturingMove = -1;
-            }
-        }else if(is_valid == JUMPING_MOVE){ //JUMPING MOVE
-
-            if((white_player && is_last_white(x_dest,y_dest)) || (!white_player && is_last_black(x_dest,y_dest))){
-                dropPiece = 2;
-                if(white_player) remove_piece_white(x_dest,y_dest);
-                else if(!white_player) remove_piece_black(x_dest,y_dest);
-                vector<Move> moves = get_valid_moves(white_player);
-                if(moves.empty()){
-                    dropPiece = 0;
-                    current_player = !current_player;
-                    jumpingMove = -1;
-                    capturingMove = -1;
-                }
-            }else{
-                jumpingMove = y_dest * BOARD_SIZE + x_dest;
-                vector <Move> moves = get_valid_moves(white_player);
-                if(moves.size() == 0){
-                    current_player = !current_player;
-                    jumpingMove = -1;
-                    capturingMove = -1;
-                }
-            }
 
 
-
-        }else if(is_valid == CAPTURE){ //CAPTURING
-            if(white_player) remove_piece_black((x_orig + x_dest)/2 , (y_orig + y_dest)/2);
-            else if(!white_player) remove_piece_white((x_orig + x_dest)/2 , (y_orig + y_dest)/2);
-
-
-            capturingMove = y_dest * BOARD_SIZE + x_dest; 
-            vector <Move> moves = get_valid_moves(white_player);
-            if(moves.empty()){
-
-                if((white_player && is_last_white(x_dest,y_dest)) || (!white_player && is_last_black(x_dest,y_dest))){
-                    dropPiece = 2;
-                    if(white_player) remove_piece_white(x_dest,y_dest);
-                    else if(!white_player) remove_piece_black(x_dest,y_dest);
-                    vector<Move> moves = get_valid_moves(white_player);
-                    if(moves.empty()){
-                        dropPiece = 0;
-                        current_player = !current_player;
-                        jumpingMove = -1;
-                        capturingMove = -1;
-                    }
-                }else{
-                    current_player = !current_player;
-                    jumpingMove = -1;
-                    capturingMove = -1;
-                }
-            }
-        }
-    }else { // DROP PIECE
-        if(white_player) put_piece_white(x_dest, y_dest);
-        else if(!white_player) put_piece_black(x_dest, y_dest);
-        dropPiece--;
-        if (dropPiece > 0) {
-            vector <Move> moves = get_valid_moves(white_player);
-            if (moves.empty()) {
-                current_player = !current_player;
-                jumpingMove = -1;
-                capturingMove = -1;
-                dropPiece = 0;
-            }
-        }
-        else {
-            current_player = !current_player;
-            jumpingMove = -1;
-            capturingMove = -1;
-            dropPiece = 0;
-        }
-
-    }
-    
-    return true;
-}
-
-
-void Board::move_piece_white(size_t pos_orig, size_t pos_dest){
-    if(remove_piece_white(pos_orig))
-        put_piece_white(pos_dest);
-}
-void Board::move_piece_black(size_t pos_orig, size_t pos_dest){
-    if(remove_piece_black(pos_orig))
-        put_piece_black(pos_dest);
-}
-void Board::move_piece_white(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest){
-    move_piece_white(y_orig*BOARD_SIZE+x_orig, y_dest*BOARD_SIZE+x_dest);
-}
-void Board::move_piece_black(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest){
-    move_piece_black(y_orig*BOARD_SIZE+x_orig, y_dest*BOARD_SIZE+x_dest);
-}
-
-unsigned int Board::valid_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player){
-    vector<Move> moves = get_valid_moves(white_player);
-    for(auto it = moves.begin(); it != moves.end();++it){
-        Move m = *it;
-        if(m.x_orig == x_orig && m.y_orig == y_orig && m.x_dest == x_dest && m.y_dest == y_dest)
-            return m.type;
-    }
-    return 0;
-}
-
-unsigned int Board::valid_move_aux(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player){
-    
-    //não pode ser maior que o tabuleiro
-    if(x_dest >= BOARD_SIZE || y_dest >=BOARD_SIZE)
-        return false;
-    //se houver peça na posição de destino,
-    if(is_piece(x_dest,y_dest)){
-        return false;
-    }
-    if(dropPiece == 0){
-        //se nao houver peça daquele jogador na posição de origem
-        if((white_player && !get_piece_white(x_orig,y_orig)) || (!white_player && !get_piece_black(x_orig,y_orig)))
-            return false;
-        if(jumpingMove != -1){
-            //cout<<"tenho que saltar "<<x_orig<<","<<y_orig<<"     "<<white_player<<endl;
-            if(int(y_orig*BOARD_SIZE+x_orig) != jumpingMove)
-                return false;
-            //cout<<"passei"<<endl;
-        }
-        else if(capturingMove != -1){
-            if(int(y_orig*BOARD_SIZE+x_orig) != capturingMove)
-                return false;
-        }
-
-        int x_delta = x_dest - x_orig;
-        int y_delta = y_dest - y_orig;
-
-        //se não houver peça na posição de destino
-        if((x_delta == -1 || x_delta == 0 || x_delta == 1) && (y_delta == -1 || y_delta == 1) && jumpingMove == -1 && capturingMove == -1){
-            //é possivel fazer um ORDINARY MOVE
-            if((white_player && y_delta == -1) || (!white_player && y_delta == 1))
-                return ORDINARY_MOVE; //ORDINARY MOVE
-        }
-        else if((x_delta == -2 || x_delta == 0 || x_delta == 2)){
-            int mid_x=x_orig+x_delta/2;
-            int mid_y=y_orig+y_delta/2;
-            // JUMPING MOVE ou alguns casos do CAPTURE
-            if(y_delta == -2 || y_delta == 2){
-                if(white_player && y_delta == -2){
-                    if(get_piece_white(mid_x,mid_y) && capturingMove == -1)
-                        return JUMPING_MOVE; //JUMP
-                    else if(get_piece_black(mid_x,mid_y) && jumpingMove == -1)
-                        return CAPTURE; //CAPTURE
-                }
-                else if(!white_player && y_delta == 2){
-                    if(get_piece_black(mid_x,mid_y) && capturingMove == -1)
-                        return JUMPING_MOVE; //JUMP
-                    else if(get_piece_white(mid_x,mid_y) && jumpingMove == -1)
-                        return CAPTURE; //CAPTURE
-                }
-            }else if(y_delta == 0 && x_delta != 0 && jumpingMove == -1){
-                if((white_player && get_piece_black(mid_x,mid_y)) || (!white_player && get_piece_white(mid_x,mid_y)) )
-                    return CAPTURE; //CAPTURE
-            }
-        }
-    }else{
-        if(white_player && is_drop_zone_white(x_dest,y_dest))
-            return DROP;
-        if(!white_player && is_drop_zone_black(x_dest,y_dest))
-            return DROP;
-    }
-
-    return false;
-}
 
 //TODO: better display
 void Board::display(){
@@ -486,8 +538,8 @@ Game::Game(int player1Mode, int player2Mode) : player1(player1Mode) , player2(pl
     minimax = Minimax();
 }
 
-bool Game::make_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player){
-    return board.move_piece(x_orig,y_orig,x_dest,y_dest,board.current_player);
+bool Game::make_move(Move move, bool white_player){
+    return board.move_piece(move,board.current_player);
 }
 
 void Game::get_move(){
@@ -532,7 +584,8 @@ void Game::get_move_human(){
 
     cout<<"Destination x: "; cin>>x_dest;
     cout<<"Destination Y: "; cin>>y_dest;
-    bool move = make_move(x_orig,y_orig,x_dest,y_dest,board.current_player);
+    Move m = Move(x_orig,y_orig,x_dest,y_dest);
+    bool move = make_move(m,board.current_player);
     if(!move)
         cout<<"Invalid move, try another one"<<endl;
 }
@@ -541,7 +594,7 @@ void Game::get_move_ai1(){ //makes first move available
     vector<Move> moves = board.get_valid_moves(board.current_player);
     Move m = moves[0];
     m.display();cout<<endl;
-    make_move(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
+    make_move(m,board.current_player);
 }
 
 void Game::get_move_ai2(){ //makes first move available
@@ -551,7 +604,7 @@ void Game::get_move_ai2(){ //makes first move available
     cout<<"EVAL: \n"<<minimax.minimax(board,2,alpha,beta,1,m)<<endl;
     cout<<"End minimax"<<endl;
     m.display();cout<<endl;
-    make_move(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
+    make_move(m,board.current_player);
 }
 
 void Game::get_move_ai3(){ //makes first move available
@@ -561,7 +614,7 @@ void Game::get_move_ai3(){ //makes first move available
     cout<<"EVAL: \n"<<minimax.minimax(board,4,alpha,beta,1,m)<<endl;
     cout<<"End minimax"<<endl;
     m.display();cout<<endl;
-    make_move(m.x_orig,m.y_orig,m.x_dest,m.y_dest,board.current_player);
+    make_move(m,board.current_player);
 }
 
 void Game::game_loop(){
@@ -570,7 +623,7 @@ void Game::game_loop(){
 
     while (true)
     {   
-            /*cout<<board.board_white<<endl;cout<<board.board_black<<endl;cout<<board.current_player<<endl;cout<<board.jumpingMove<<endl;cout<<board.capturingMove<<endl;*/
+        //cout<<board.board_white<<endl;cout<<board.board_black<<endl;cout<<board.current_player<<endl;cout<<board.jumpingMove<<endl;cout<<board.capturingMove<<endl;
         if(board.end_game(board.current_player)){
             cout<<"END OF GAME  ----- PLAYER "<<(board.gameover(0) ? 1 : 2)<<" WON"<<endl;
             cout<<board.board_white<<endl;
