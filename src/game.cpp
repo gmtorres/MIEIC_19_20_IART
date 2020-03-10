@@ -254,13 +254,14 @@ unsigned int Board::valid_move_aux(const Move &move, bool white_player){
 
     ulong occupied = board_white | board_black;
     
-    if( (white_player && !(board_white & (1L << pos_orig))) || (!white_player && !(board_black & (1L << pos_orig))) )
-        return false;
 
     if(occupied & (1L << pos_dest))
         return false;
     
-    if(!dropPiece){
+    if(dropPiece == 0){
+
+        if( (white_player && !(board_white & (1L << pos_orig))) || (!white_player && !(board_black & (1L << pos_orig))) )
+            return false;
 
         if(jumpingMove != -1 && jumpingMove != int(pos_orig))
             return false;
