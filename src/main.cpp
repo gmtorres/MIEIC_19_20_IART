@@ -1,36 +1,28 @@
 #include <iostream>
+#include <chrono> 
 
 #include "game.h"
 
 using namespace std;
+using namespace std::chrono; 
 
 int main(void){
 
-    cout<<"Ola"<<endl;
+    cout<<"       <------  Welcome to Eximo!  ------>\n\n"<<endl;
 
-    Game game = Game(3,2);
-
-    cout<<game.board.eval()<<endl;
-
-    //game.board.get_valid_boards(1);
+    Game game = Game(1,3);
 
     //game.game_loop();
+    /*auto start = high_resolution_clock::now(); 
 
-    vector<Board> nextBoards = game.board.get_valid_boards(game.board.current_player);
+    game.board.get_valid_boards(1);
 
-    for(int i = 0; i < nextBoards.size(); ++i){
-        nextBoards[i].last_move.display(true);
-    }
+    auto stop = high_resolution_clock::now();
 
-
-    Move move;
-
-    float alpha = -INF, beta = INF;
-    cout<<game.minimax.minimax(game.board,3,alpha,beta,1,move)<<endl;
-
-    cout<<move.x_orig<<"  "<<move.y_orig<<"  "<<move.x_dest<<"  "<<move.y_dest<<"  "<<endl;
-
-
+    auto duration = duration_cast<microseconds>(stop - start); 
+  
+    cout << "Time taken by function: "
+         << duration.count() << " microseconds" << endl; */
 
     return 0;
 }

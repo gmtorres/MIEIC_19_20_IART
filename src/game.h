@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
 #define BOARD_SIZE 8
 #define INF 1000000
@@ -20,7 +21,8 @@ public:
     unsigned int type = 0;
     Move(): x_orig(0), y_orig(0), x_dest(0), y_dest(0) {};
     Move(size_t x_o,size_t y_o,size_t x_d,size_t y_d) : x_orig(x_o), y_orig(y_o), x_dest(x_d), y_dest(y_d) {};
-    Move(const Move &m) : x_orig(m.x_orig), y_orig(m.y_orig), x_dest(m.x_dest), y_dest(m.y_dest) {};
+
+    void set_vars(size_t x_o,size_t y_o,size_t x_d,size_t y_d);
 
     void display(bool t);
 };
@@ -39,6 +41,7 @@ public: //private:
     int jumpingMove = -1; //-1 :  false, outro numero: posiçao da peça
     int capturingMove = -1; //-1 :  false, outro numero: posiçao da peça
     int dropPiece = 0;
+
     Move last_move;
 
     float evaluate_board1();
@@ -84,7 +87,7 @@ public:
     Board();
     Board(const Board &old);
 
-    bool move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
+    bool move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player, int valid);
     
     vector <Move> get_valid_moves(bool white_player);
     vector <Board> get_valid_boards(bool white_player);
@@ -107,9 +110,12 @@ class Minimax{
 
 public:
 
+    size_t cuts;
+
     Minimax();
 
     float minimax(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer,Move &move);
+    float minimax_aux(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer);
 
 };
 
