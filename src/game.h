@@ -149,8 +149,8 @@ public:
 
     Minimax();
 
-    float minimax(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer,Move &move);
-    float minimax_aux(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer);
+    float minimax(Board board, unsigned short depth, float alpha, float beta,Move &move);
+    float minimax_aux(Board board, unsigned short depth, float alpha, float beta);
 
 };
 
