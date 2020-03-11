@@ -41,6 +41,10 @@ Board::Board(const Board &old){
     last_move = old.last_move;
 }
 
+bool Board::operator==(const Board& b2)const{
+    return (board_black == b2.board_black && board_white == b2.board_white && capturingMove == b2.capturingMove && current_player == b2.current_player && dropPiece == b2.dropPiece && jumpingMove == b2.jumpingMove);
+}
+
 
 
 vector<Board> Board::get_valid_boards(bool white_player){
@@ -93,8 +97,8 @@ bool Board::gameover(bool white_player){ // check if a player has lost the game
     else board = board_black;
     if(board == 0)
         return true;
-    vector<Move> moves = get_valid_moves(white_player);
-    if(moves.size() == 0){ //TODO:: only need to check if threr is one move possible, not all
+
+    if(!any_move_available(white_player)){
         //cout<<"No more possible moves for player"<<(current_player ? 1 : 2)<<endl;
         return true;
     }
@@ -105,8 +109,8 @@ bool Board::end_game(bool white_player){
     if(board_white == 0 || board_black == 0){
         return true;
     }
-    vector<Move> moves = get_valid_moves(white_player);
-    if(moves.size() == 0){ //TODO:: only need to check if threr is one move possible, not all
+    
+    if(!any_move_available(white_player)){
         //cout<<"No more possible moves for player"<<(current_player ? 1 : 2)<<endl;
         return true;
     }
@@ -141,6 +145,7 @@ void Board::get_valid_moves_aux(vector<Move> &moves, Move move, bool &capture, b
     }
 }
 
+//true if there is a move available
 bool Board::any_move_available(bool white_player){
     ulong board;
     if(white_player) board = board_white;
@@ -354,8 +359,8 @@ bool Board::move_piece(const Move &move, bool white_player, int valid){
             break;
 
         case CAPTURE:
-            if(white_player) remove_piece_black((move.x_orig + move.x_dest)/2 , (move.y_orig + move.y_dest)/2);
-            else if(!white_player) remove_piece_white((move.x_orig + move.x_dest)/2 , (move.y_orig + move.y_dest)/2);
+            if(white_player) remove_piece_black((move.x_orig + move.x_dest)>>1 , (move.y_orig + move.y_dest)>>1);
+            else if(!white_player) remove_piece_white((move.x_orig + move.x_dest)>>1 , (move.y_orig + move.y_dest)>>1);
             capturingMove = move.y_dest * BOARD_SIZE + move.x_dest;
             if(!any_move_available(white_player)){
                 capturingMove = -1;
@@ -377,7 +382,7 @@ bool Board::move_piece(const Move &move, bool white_player, int valid){
         case DROP:
             if(white_player) put_piece_white(move.x_dest, move.y_dest);
             else if(!white_player) put_piece_black(move.x_dest, move.y_dest);
-            dropPiece--;
+            --dropPiece;
             if( (dropPiece <= 0) || (dropPiece > 0 && !any_move_available(white_player))){
                 current_player = !current_player;
                 dropPiece = 0;
@@ -612,7 +617,7 @@ void Game::get_move_ai3(){ //makes first move available
     Move m;
     cout<<"Start minimax"<<endl;
     float alpha = -INF, beta = INF;
-    cout<<"EVAL: \n"<<minimax.minimax(board,4,alpha,beta,1,m)<<endl;
+    cout<<"EVAL: \n"<<minimax.minimax(board,6,alpha,beta,1,m)<<endl;
     cout<<"End minimax"<<endl;
     m.display();cout<<endl;
     make_move(m,board.current_player);
@@ -659,16 +664,21 @@ bool compareBoard(Board b1, Board b2 ){
 
 
 Minimax::Minimax(){
-
 }
 
 float Minimax::minimax(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer, Move &move){
+
+    auto look = table.find(board);
+    if(look != table.end() && look->second.depth >= depth){
+        return look->second.eval;
+    }
+
     
     if(depth == 0 || board.end_game(board.current_player))
         return board.eval();
 
     vector<Board> nextBoards = board.get_valid_boards(board.current_player);
-    sort(nextBoards.begin(),nextBoards.end(),compareBoard);
+    //sort(nextBoards.begin(),nextBoards.end(),compareBoard);
     
     Move temp_move;
 
@@ -685,6 +695,15 @@ float Minimax::minimax(Board board, unsigned short depth, float alpha, float bet
             if(beta <= alpha)
                 break;
         }
+        auto entry = table.find(board);
+        if(entry == table.end() || entry->second.depth < depth){
+            Entry table_entry; 
+            table_entry.eval = maxEval;
+            table_entry.depth = depth;
+            table_entry.alpha = alpha;
+            table_entry.beta = beta;
+            table[board] = table_entry;
+        }
         return maxEval;
     }
     else{
@@ -699,17 +718,32 @@ float Minimax::minimax(Board board, unsigned short depth, float alpha, float bet
             if(beta <= alpha)
                 break;
         }
+        auto entry = table.find(board);
+        if(entry == table.end() || entry->second.depth < depth){
+            Entry table_entry; 
+            table_entry.eval = minEval;
+            table_entry.depth = depth;
+            table_entry.alpha = alpha;
+            table_entry.beta = beta;
+            table[board] = table_entry;
+        }
         return minEval;
     }
 }
 
 float Minimax::minimax_aux(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer){
+
+    auto look = table.find(board);
+    if(look != table.end() && look->second.depth >= depth){
+        //cout<<"hit"<<endl;
+        return look->second.eval;
+    }
     
     if(depth == 0 || board.end_game(board.current_player))
         return board.eval();
 
     vector<Board> nextBoards = board.get_valid_boards(board.current_player);
-    sort(nextBoards.begin(),nextBoards.end(),compareBoard);
+    //sort(nextBoards.begin(),nextBoards.end(),compareBoard);
 
     auto nextBoardsEnd = nextBoards.end();
     if(maximizingPlayer == board.current_player){
@@ -723,6 +757,15 @@ float Minimax::minimax_aux(Board board, unsigned short depth, float alpha, float
             if(beta <= alpha)
                 break;
         }
+        auto entry = table.find(board);
+        if(entry == table.end() || entry->second.depth < depth){
+            Entry table_entry; 
+            table_entry.eval = maxEval;
+            table_entry.depth = depth;
+            table_entry.alpha = alpha;
+            table_entry.beta = beta;
+            table[board] = table_entry;
+        }
         return maxEval;
     }
     else{
@@ -735,6 +778,15 @@ float Minimax::minimax_aux(Board board, unsigned short depth, float alpha, float
             beta = (beta < eval) ? beta : eval;
             if(beta <= alpha)
                 break;
+        }
+        auto entry = table.find(board);
+        if(entry == table.end() || entry->second.depth < depth){
+            Entry table_entry; 
+            table_entry.eval = minEval;
+            table_entry.depth = depth;
+            table_entry.alpha = alpha;
+            table_entry.beta = beta;
+            table[board] = table_entry;
         }
         return minEval;
     }

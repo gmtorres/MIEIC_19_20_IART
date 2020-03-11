@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 
 #define BOARD_SIZE 8
 #define INF 1000000
@@ -83,6 +84,8 @@ public: //private:
     bool is_drop_zone_white(size_t x, size_t y);
     bool is_drop_zone_black(size_t x, size_t y);
 
+    bool operator==(const Board &b2) const;
+
 public:
 
     bool current_player = 1;
@@ -110,7 +113,35 @@ public:
  * 
  */
 
+
+struct KeyHasher{
+
+    std::size_t operator()(const Board& k) const
+    {
+        using std::size_t;
+        using std::hash;
+
+        return hash<ulong>()(k.board_white ^ (k.board_black  << 1) >> 1) ^ k.current_player ^ ((k.capturingMove << 2) ^ k.jumpingMove) >> k.dropPiece; 
+    }
+
+    bool operator() (const Board& k1, const Board& k2) const{
+        return k1 == k2;
+    } 
+
+};
+
+struct Entry{
+    float eval;
+    float depth;
+    float alpha;
+    float beta; 
+};
+
 class Minimax{
+private:
+
+    std::unordered_map<Board,Entry,KeyHasher> table;
+
 
 public:
 
@@ -135,6 +166,8 @@ private:
     //unsigned int move_count;
 
     void find_best_move();
+
+
 
 public:
 

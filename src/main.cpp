@@ -12,19 +12,18 @@ int main(void){
 
     Game game = Game(1,3);
 
-    game.game_loop();
+    //
 
     auto start = high_resolution_clock::now(); 
 
-    //game.board.get_valid_boards(1);
-    //int r = game.board.move_piece(Move(1,5,1,4),true);
+    game.game_loop();
 
     auto stop = high_resolution_clock::now();
 
-    auto duration = duration_cast<nanoseconds>(stop - start); 
+    auto duration = duration_cast<milliseconds>(stop - start); 
   
     cout << "Time taken by function: "
-         << duration.count() << " nanoseconds" << endl; 
+         << duration.count() << " milliseconds" << endl; 
 
     return 0;
 }
