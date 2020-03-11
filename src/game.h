@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <unordered_map>
 
 #define BOARD_SIZE 8
 #define INF 1000000
@@ -25,6 +26,9 @@ public:
     void set_vars(size_t x_o,size_t y_o,size_t x_d,size_t y_d);
 
     void display(bool t);
+
+    bool operator == (Move const & m2);
+
 };
  
 
@@ -71,14 +75,16 @@ public: //private:
 
     void get_valid_moves_aux(vector<Move> &moves, Move move, bool &capture, bool white_player);
 
-    unsigned int valid_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
-    unsigned int valid_move_aux(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
+    unsigned int valid_move(Move move, bool white_player);
+    unsigned int valid_move_aux(const Move &move, bool white_player);
 
     bool is_last_white(size_t x, size_t y);
     bool is_last_black(size_t x, size_t y);
 
     bool is_drop_zone_white(size_t x, size_t y);
     bool is_drop_zone_black(size_t x, size_t y);
+
+    bool operator==(const Board &b2) const;
 
 public:
 
@@ -87,10 +93,11 @@ public:
     Board();
     Board(const Board &old);
 
-    bool move_piece(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player, int valid);
+    bool move_piece(const Move &move, bool white_player, int valid = false);
     
     vector <Move> get_valid_moves(bool white_player);
     vector <Board> get_valid_boards(bool white_player);
+    bool any_move_available(bool white_player);
 
     bool gameover(bool white_player);
     bool end_game(bool white_player);
@@ -106,7 +113,35 @@ public:
  * 
  */
 
+
+struct KeyHasher{
+
+    std::size_t operator()(const Board& k) const
+    {
+        using std::size_t;
+        using std::hash;
+
+        return hash<ulong>()(k.board_white ^ (k.board_black  << 1) >> 1) ^ k.current_player ^ ((k.capturingMove << 2) ^ k.jumpingMove) >> k.dropPiece; 
+    }
+
+    bool operator() (const Board& k1, const Board& k2) const{
+        return k1 == k2;
+    } 
+
+};
+
+struct Entry{
+    float eval;
+    float depth;
+    float alpha;
+    float beta; 
+};
+
 class Minimax{
+private:
+
+    std::unordered_map<Board,Entry,KeyHasher> table;
+
 
 public:
 
@@ -114,8 +149,8 @@ public:
 
     Minimax();
 
-    float minimax(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer,Move &move);
-    float minimax_aux(Board board, unsigned short depth, float alpha, float beta, bool maximizingPlayer);
+    float minimax(Board board, unsigned short depth, float alpha, float beta,Move &move);
+    float minimax_aux(Board board, unsigned short depth, float alpha, float beta);
 
 };
 
@@ -132,6 +167,8 @@ private:
 
     void find_best_move();
 
+
+
 public:
 
     Board board;
@@ -144,7 +181,7 @@ public:
     void get_move_ai1();
     void get_move_ai2();
     void get_move_ai3();
-    bool make_move(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest, bool white_player);
+    bool make_move(Move move, bool white_player);
 
     void game_loop();
 

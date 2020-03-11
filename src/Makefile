@@ -1,7 +1,7 @@
 PROG = Eximo
 
 CC = g++
-CPPFLAGS = -Wall
+CPPFLAGS = -Wall 
 
 SRCS = main.cpp game.cpp
 
