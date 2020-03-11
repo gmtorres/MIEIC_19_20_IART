@@ -93,7 +93,7 @@ public:
     Board();
     Board(const Board &old);
 
-    bool move_piece(const Move &move, bool white_player, int valid = false);
+    bool move_piece(const Move &move, bool white_player, int valid);
     
     vector <Move> get_valid_moves(bool white_player);
     vector <Board> get_valid_boards(bool white_player);

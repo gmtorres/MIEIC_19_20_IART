@@ -307,11 +307,11 @@ unsigned int Board::valid_move_aux(const Move &move, bool white_player){
 }
 
 
-bool Board::move_piece(const Move &move, bool white_player, int valid){
+bool Board::move_piece(const Move &move, bool white_player, int valid = false){
     
     u_char type;
     if(valid == 0){
-        type = valid_move_aux(move,white_player);
+        type = valid_move(move,white_player);
         if(type == false)
             return false;
     }else
@@ -545,7 +545,7 @@ Game::Game(int player1Mode, int player2Mode) : player1(player1Mode) , player2(pl
 }
 
 bool Game::make_move(Move move, bool white_player){
-    return board.move_piece(move,board.current_player);
+    return board.move_piece(move,board.current_player,false);
 }
 
 void Game::get_move(){
@@ -578,7 +578,7 @@ void Game::get_move_human(){
     cout<<"Available moves (#="<<moves.size()<<"): ";
     for(size_t i = 0; i < moves.size();++i){
         Move m = moves[i];
-        cout<<m.x_orig<<","<<m.y_orig<<"->"<<m.x_dest<<","<<m.y_dest<<"   ";
+        cout<<(int)m.x_orig<<","<<(int)m.y_orig<<"->"<<(int)m.x_dest<<","<<(int)m.y_dest<<"   ";
     }
     cout<<endl;
 
@@ -617,7 +617,7 @@ void Game::get_move_ai3(){ //makes first move available
     Move m;
     cout<<"Start minimax"<<endl;
     float alpha = -INF, beta = INF;
-    cout<<"EVAL: \n"<<minimax.minimax(board,6,alpha,beta,m)<<endl;
+    cout<<"EVAL: \n"<<minimax.minimax(board,5,alpha,beta,m)<<endl;
     cout<<"End minimax"<<endl;
     m.display();cout<<endl;
     make_move(m,board.current_player);
@@ -670,7 +670,7 @@ float Minimax::minimax(Board &board, unsigned short depth, float alpha, float be
 
     auto look = table.find(board);
     if(look != table.end() && look->second.depth >= depth){
-        return look->second.eval;
+        //return look->second.eval;
     }
 
     if(depth == 0 || board.end_game(board.current_player))
@@ -685,7 +685,7 @@ float Minimax::minimax(Board &board, unsigned short depth, float alpha, float be
     if(board.current_player){
         float maxEval = -INF;
         for(auto it = nextBoards.begin(); it != nextBoardsEnd; ++it){
-            float eval = minimax_aux(*it, depth-1, alpha, beta);
+            float eval = minimax_aux(*it, depth - (board.current_player != it->current_player ? 1 : 0) , alpha, beta);
             if(maxEval < eval){
                 maxEval = eval;
                 move = (*it).last_move;
@@ -708,7 +708,7 @@ float Minimax::minimax(Board &board, unsigned short depth, float alpha, float be
     else{
         float minEval = INF;
         for(auto it = nextBoards.begin(); it != nextBoardsEnd; ++it){
-            float eval = minimax_aux(*it, depth-1, alpha, beta);
+            float eval = minimax_aux(*it, depth - (board.current_player != it->current_player ? 1 : 0), alpha, beta);
             if(minEval > eval){
                 minEval = eval;
                 move = (*it).last_move;
@@ -748,7 +748,7 @@ float Minimax::minimax_aux(Board &board, unsigned short depth, float alpha, floa
     if(board.current_player){
         float maxEval = -INF;
         for(auto it = nextBoards.begin(); it != nextBoardsEnd; ++it){
-            float eval = minimax_aux(*it, depth-1, alpha, beta);
+            float eval = minimax_aux(*it, depth - (board.current_player != it->current_player ? 1 : 0), alpha, beta);
             if(maxEval < eval){
                 maxEval = eval;
             }
@@ -770,7 +770,7 @@ float Minimax::minimax_aux(Board &board, unsigned short depth, float alpha, floa
     else{
         float minEval = INF;
         for(auto it = nextBoards.begin(); it != nextBoardsEnd; ++it){
-            float eval = minimax_aux(*it, depth-1, alpha, beta);
+            float eval = minimax_aux(*it, depth - (board.current_player != it->current_player ? 1 : 0), alpha, beta);
             if(minEval > eval){
                 minEval = eval;
             }

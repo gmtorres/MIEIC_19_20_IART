@@ -10,13 +10,15 @@ int main(void){
 
     cout<<"       <------  Welcome to Eximo!  ------>\n\n"<<endl;
 
-    Game game = Game(1,3);
+    Game game = Game(3,1);
 
     //
 
     auto start = high_resolution_clock::now(); 
 
     game.game_loop();
+    //game.get_move_ai3();
+    //game.get_move_ai2();
 
     auto stop = high_resolution_clock::now();
 
