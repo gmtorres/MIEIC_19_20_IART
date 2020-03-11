@@ -12,11 +12,11 @@ size_t count_set_bit(ulong n){
 }
 
 void Move::display(bool t=false){
-    cout<<x_orig<<","<<y_orig<<" ->"<<x_dest<<","<<y_dest;
+    cout<<(int)x_orig<<","<<(int)y_orig<<" ->"<<(int)x_dest<<","<<(int)y_dest;
     if(t) cout<<"  "<< type;
 }
 
-void Move::set_vars(size_t x_o,size_t y_o,size_t x_d,size_t y_d){
+void Move::set_vars(u_char x_o,u_char y_o,u_char x_d,u_char y_d){
     x_orig = x_o;
     y_orig = y_o;
     x_dest = x_d;
@@ -62,7 +62,7 @@ vector<Board> Board::get_valid_boards(bool white_player){
     return boards;
 }
 
-float Board::eval(){ // positive favours white, negative favours black
+float Board::eval() const{ // positive favours white, negative favours black
 
     /*if(gameover(0))
         return 1000;
@@ -152,8 +152,8 @@ bool Board::any_move_available(bool white_player){
     else if(!white_player) board = board_black;
 
     if(dropPiece == 0){
-        size_t x = 0;
-        size_t y = 0;
+        u_char x = 0;
+        u_char y = 0;
         while(board != 0){
             if(board & 1L){
                 
@@ -185,8 +185,8 @@ bool Board::any_move_available(bool white_player){
             board = board >> 1;
         }
     }else{
-        for(size_t y = 0; y < 2; ++y){
-            for(size_t x = 1; x < BOARD_SIZE; ++x){
+        for(u_char y = 0; y < 2; ++y){
+            for(u_char x = 1; x < BOARD_SIZE; ++x){
                 if(white_player) if(valid_move_aux(Move(0,0,x, y + 6),true)) return true;
                 if(!white_player) if(valid_move_aux(Move(0,0,x, y),false)) return true;
                 
@@ -206,8 +206,8 @@ vector<Move> Board::get_valid_moves(bool white_player){
     bool capture_possible = false;
 
     if(dropPiece == 0){
-        size_t x = 0;
-        size_t y = 0;
+        u_char x = 0;
+        u_char y = 0;
         while(board != 0){
             if(board & 1L){
                 
@@ -239,8 +239,8 @@ vector<Move> Board::get_valid_moves(bool white_player){
             board = board >> 1;
         }
     }else{
-        for(size_t y = 0; y < 2; ++y){
-            for(size_t x = 1; x < BOARD_SIZE; ++x){
+        for(u_char y = 0; y < 2; ++y){
+            for(u_char x = 1; x < BOARD_SIZE; ++x){
                 if(white_player) get_valid_moves_aux(moves,Move(0,0,x, y + 6),capture_possible,true);
                 if(!white_player) get_valid_moves_aux(moves,Move(0,0,x, y),capture_possible,false);
                 
@@ -254,8 +254,8 @@ vector<Move> Board::get_valid_moves(bool white_player){
 unsigned int Board::valid_move_aux(const Move &move, bool white_player){
     if(move.x_dest >= BOARD_SIZE || move.y_dest >=BOARD_SIZE)
         return false;
-    size_t pos_orig = move.y_orig * BOARD_SIZE + move.x_orig;
-    size_t pos_dest = move.y_dest * BOARD_SIZE + move.x_dest;
+    u_char pos_orig = move.y_orig * BOARD_SIZE + move.x_orig;
+    u_char pos_dest = move.y_dest * BOARD_SIZE + move.x_dest;
 
     ulong occupied = board_white | board_black;
     
@@ -273,8 +273,8 @@ unsigned int Board::valid_move_aux(const Move &move, bool white_player){
         if(capturingMove != -1 && capturingMove != int(pos_orig))
             return false;
 
-        int delta_x = move.x_dest - move.x_orig;
-        int delta_y = move.y_dest - move.y_orig;
+        char delta_x = move.x_dest - move.x_orig;
+        char delta_y = move.y_dest - move.y_orig;
 
         if((delta_x == -1 || delta_x == 0 || delta_x == 1) && jumpingMove == -1 && capturingMove == -1){
             if(white_player && delta_y == -1)
@@ -309,7 +309,7 @@ unsigned int Board::valid_move_aux(const Move &move, bool white_player){
 
 bool Board::move_piece(const Move &move, bool white_player, int valid){
     
-    int type;
+    u_char type;
     if(valid == 0){
         type = valid_move_aux(move,white_player);
         if(type == false)
@@ -383,7 +383,7 @@ bool Board::move_piece(const Move &move, bool white_player, int valid){
             if(white_player) put_piece_white(move.x_dest, move.y_dest);
             else if(!white_player) put_piece_black(move.x_dest, move.y_dest);
             --dropPiece;
-            if( (dropPiece <= 0) || (dropPiece > 0 && !any_move_available(white_player))){
+            if( (dropPiece == 0) || (dropPiece > 0 && !any_move_available(white_player))){
                 current_player = !current_player;
                 dropPiece = 0;
             }
@@ -408,92 +408,92 @@ bool Board::move_piece(const Move &move, bool white_player, int valid){
 
 
 
-void Board::move_piece_white(size_t pos_orig, size_t pos_dest){
+void Board::move_piece_white(u_char pos_orig, u_char pos_dest){
     if(remove_piece_white(pos_orig))
         put_piece_white(pos_dest);
 }
-void Board::move_piece_black(size_t pos_orig, size_t pos_dest){
+void Board::move_piece_black(u_char pos_orig, u_char pos_dest){
     if(remove_piece_black(pos_orig))
         put_piece_black(pos_dest);
 }
-void Board::move_piece_white(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest){
+void Board::move_piece_white(u_char x_orig, u_char y_orig,u_char x_dest, u_char y_dest){
     move_piece_white(y_orig*BOARD_SIZE+x_orig, y_dest*BOARD_SIZE+x_dest);
 }
-void Board::move_piece_black(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest){
+void Board::move_piece_black(u_char x_orig, u_char y_orig,u_char x_dest, u_char y_dest){
     move_piece_black(y_orig*BOARD_SIZE+x_orig, y_dest*BOARD_SIZE+x_dest);
 }
 
 
 
-bool Board::get_piece_white(size_t pos){
+bool Board::get_piece_white(u_char pos){
     if(pos>=BOARD_SIZE*BOARD_SIZE)
         return false;
     return (board_white >> pos) & 1L;
 }
-bool Board::get_piece_white(size_t x, size_t y){
+bool Board::get_piece_white(u_char x, u_char y){
     if(x>=BOARD_SIZE || y>=BOARD_SIZE)
         return false;
     return get_piece_white(y*BOARD_SIZE + x);
 }
-bool Board::get_piece_black(size_t pos){
+bool Board::get_piece_black(u_char pos){
     if(pos>=BOARD_SIZE*BOARD_SIZE)
         return false;
     return (board_black >> pos) & 1L;
 }
-bool Board::get_piece_black(size_t x, size_t y){
+bool Board::get_piece_black(u_char x, u_char y){
     if(x>=BOARD_SIZE || y>=BOARD_SIZE)
         return false;
     return get_piece_black(y*BOARD_SIZE + x);
 }
-bool Board::is_piece(size_t pos){
+bool Board::is_piece(u_char pos){
     if(pos>=BOARD_SIZE*BOARD_SIZE)
         return false;
     return get_piece_white(pos) || get_piece_black(pos);
 }
-bool Board::is_piece(size_t x, size_t y){
+bool Board::is_piece(u_char x, u_char y){
     if(x>=BOARD_SIZE || y>=BOARD_SIZE){
         return false;
     }
     return is_piece(y*BOARD_SIZE + x);
 }
-void Board::put_piece_white(size_t pos){
+void Board::put_piece_white(u_char pos){
     if(pos>=BOARD_SIZE*BOARD_SIZE)
         return;
     board_white |= (1L << pos);
 }
-void Board::put_piece_white(size_t x, size_t y){
+void Board::put_piece_white(u_char x, u_char y){
     if(x>=BOARD_SIZE || y>=BOARD_SIZE)
         return;
     put_piece_white(y*BOARD_SIZE + x);
 }
-bool Board::remove_piece_white(size_t pos){
+bool Board::remove_piece_white(u_char pos){
     if(pos>=BOARD_SIZE*BOARD_SIZE || !get_piece_white(pos))
         return false;
     board_white = board_white & ~(1L << pos);
     return true;
 }
-bool Board::remove_piece_white(size_t x, size_t y){
+bool Board::remove_piece_white(u_char x, u_char y){
     if(x>=BOARD_SIZE || y>=BOARD_SIZE)
         return false;
     return remove_piece_white(y*BOARD_SIZE + x);
 }
-void Board::put_piece_black(size_t pos){
+void Board::put_piece_black(u_char pos){
     if(pos>=BOARD_SIZE*BOARD_SIZE)
         return;
     board_black |= (1L << pos);
 }
-void Board::put_piece_black(size_t x, size_t y){
+void Board::put_piece_black(u_char x, u_char y){
     if(x>=BOARD_SIZE || y>=BOARD_SIZE)
         return;
     put_piece_black(y*BOARD_SIZE + x);
 }
-bool Board::remove_piece_black(size_t pos){
+bool Board::remove_piece_black(u_char pos){
     if(pos>=BOARD_SIZE*BOARD_SIZE || !get_piece_black(pos))
         return false;
     board_black = board_black & ~(1L << pos);
     return true;
 }
-bool Board::remove_piece_black(size_t x, size_t y){
+bool Board::remove_piece_black(u_char x, u_char y){
     if(x>=BOARD_SIZE || y>=BOARD_SIZE)
         return false;
     return remove_piece_black(y*BOARD_SIZE + x);
@@ -501,16 +501,16 @@ bool Board::remove_piece_black(size_t x, size_t y){
 
 
 //CHECK if OKAY
-bool Board::is_last_white(size_t x, size_t y){
+bool Board::is_last_white(u_char x, u_char y){
     return y == 0;
 }
-bool Board::is_last_black(size_t x, size_t y){
+bool Board::is_last_black(u_char x, u_char y){
     return y == BOARD_SIZE-1;
 }
-bool Board::is_drop_zone_white(size_t x, size_t y){
+bool Board::is_drop_zone_white(u_char x, u_char y){
     return (y == BOARD_SIZE -1 || y == BOARD_SIZE - 2) && (x != 0 && x != BOARD_SIZE - 1) ;
 }
-bool Board::is_drop_zone_black(size_t x, size_t y){
+bool Board::is_drop_zone_black(u_char x, u_char y){
     return (y == 0 || y == 1) && (x != 0 && x != BOARD_SIZE - 1) ;
 }
 
@@ -521,8 +521,8 @@ bool Board::is_drop_zone_black(size_t x, size_t y){
 //TODO: better display
 void Board::display(){
 
-    for(size_t a = 0; a < BOARD_SIZE; ++a){
-        for(size_t b = 0; b < BOARD_SIZE; ++b){
+    for(u_char a = 0; a < BOARD_SIZE; ++a){
+        for(u_char b = 0; b < BOARD_SIZE; ++b){
             short pos = a * BOARD_SIZE + b;
             short v=0;
             if(get_piece_white(pos))
@@ -656,7 +656,7 @@ void Game::display(){
 /*-------------------- MINIMAX --------------------*/
 
 
-bool compareBoard(Board b1, Board b2 ){
+bool Minimax::compareBoards(const Board b1, const Board b2 ){
     float v1 = b1.eval();
     float v2 = b2.eval();
     return (v1 < v2);
@@ -666,7 +666,7 @@ bool compareBoard(Board b1, Board b2 ){
 Minimax::Minimax(){
 }
 
-float Minimax::minimax(Board board, unsigned short depth, float alpha, float beta, Move &move){
+float Minimax::minimax(Board &board, unsigned short depth, float alpha, float beta, Move &move){
 
     auto look = table.find(board);
     if(look != table.end() && look->second.depth >= depth){
@@ -677,7 +677,7 @@ float Minimax::minimax(Board board, unsigned short depth, float alpha, float bet
         return board.eval();
 
     vector<Board> nextBoards = board.get_valid_boards(board.current_player);
-    //sort(nextBoards.begin(),nextBoards.end(),compareBoard);
+    sort(nextBoards.begin(),nextBoards.end(),compareBoards);
     
     Move temp_move;
 
@@ -730,7 +730,7 @@ float Minimax::minimax(Board board, unsigned short depth, float alpha, float bet
     }
 }
 
-float Minimax::minimax_aux(Board board, unsigned short depth, float alpha, float beta){
+float Minimax::minimax_aux(Board &board, unsigned short depth, float alpha, float beta){
 
     auto look = table.find(board);
     if(look != table.end() && look->second.depth >= depth){

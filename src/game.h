@@ -15,15 +15,15 @@ using namespace std;
 
 class Move{
 public:
-    size_t x_orig;
-    size_t y_orig;
-    size_t x_dest;
-    size_t y_dest;
-    unsigned int type = 0;
+    u_char x_orig;
+    u_char y_orig;
+    u_char x_dest;
+    u_char y_dest;
+    u_char type = 0;
     Move(): x_orig(0), y_orig(0), x_dest(0), y_dest(0) {};
-    Move(size_t x_o,size_t y_o,size_t x_d,size_t y_d) : x_orig(x_o), y_orig(y_o), x_dest(x_d), y_dest(y_d) {};
+    Move(u_char x_o,u_char y_o,u_char x_d,u_char y_d) : x_orig(x_o), y_orig(y_o), x_dest(x_d), y_dest(y_d) {};
 
-    void set_vars(size_t x_o,size_t y_o,size_t x_d,size_t y_d);
+    void set_vars(u_char x_o,u_char y_o,u_char x_d,u_char y_d);
 
     void display(bool t);
 
@@ -52,37 +52,37 @@ public: //private:
     float evaluate_board2();
     float evaluate_board3();
 
-    bool get_piece_white(size_t pos);
-    bool get_piece_white(size_t x, size_t y);
-    bool get_piece_black(size_t pos);
-    bool get_piece_black(size_t x, size_t y);
-    bool is_piece(size_t pos);
-    bool is_piece(size_t x, size_t y);
+    bool get_piece_white(u_char pos);
+    bool get_piece_white(u_char x, u_char y);
+    bool get_piece_black(u_char pos);
+    bool get_piece_black(u_char x, u_char y);
+    bool is_piece(u_char pos);
+    bool is_piece(u_char x, u_char y);
 
-    void put_piece_white(size_t pos);
-    void put_piece_white(size_t x, size_t y);
-    bool remove_piece_white(size_t pos);
-    bool remove_piece_white(size_t x, size_t y);
-    void put_piece_black(size_t pos);
-    void put_piece_black(size_t x, size_t y);
-    bool remove_piece_black(size_t pos);
-    bool remove_piece_black(size_t x, size_t y);
+    void put_piece_white(u_char pos);
+    void put_piece_white(u_char x, u_char y);
+    bool remove_piece_white(u_char pos);
+    bool remove_piece_white(u_char x, u_char y);
+    void put_piece_black(u_char pos);
+    void put_piece_black(u_char x, u_char y);
+    bool remove_piece_black(u_char pos);
+    bool remove_piece_black(u_char x, u_char y);
 
-    void move_piece_white(size_t pos_orig, size_t pos_dest);
-    void move_piece_black(size_t pos_orig, size_t pos_dest);
-    void move_piece_white(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest);
-    void move_piece_black(size_t x_orig, size_t y_orig,size_t x_dest, size_t y_dest);
+    void move_piece_white(u_char pos_orig, u_char pos_dest);
+    void move_piece_black(u_char pos_orig, u_char pos_dest);
+    void move_piece_white(u_char x_orig, u_char y_orig,u_char x_dest, u_char y_dest);
+    void move_piece_black(u_char x_orig, u_char y_orig,u_char x_dest, u_char y_dest);
 
     void get_valid_moves_aux(vector<Move> &moves, Move move, bool &capture, bool white_player);
 
     unsigned int valid_move(Move move, bool white_player);
     unsigned int valid_move_aux(const Move &move, bool white_player);
 
-    bool is_last_white(size_t x, size_t y);
-    bool is_last_black(size_t x, size_t y);
+    bool is_last_white(u_char x, u_char y);
+    bool is_last_black(u_char x, u_char y);
 
-    bool is_drop_zone_white(size_t x, size_t y);
-    bool is_drop_zone_black(size_t x, size_t y);
+    bool is_drop_zone_white(u_char x, u_char y);
+    bool is_drop_zone_black(u_char x, u_char y);
 
     bool operator==(const Board &b2) const;
 
@@ -102,7 +102,7 @@ public:
     bool gameover(bool white_player);
     bool end_game(bool white_player);
 
-    float eval();
+    float eval() const;
 
     void display();
 
@@ -132,7 +132,7 @@ struct KeyHasher{
 
 struct Entry{
     float eval;
-    float depth;
+    size_t depth;
     float alpha;
     float beta; 
 };
@@ -142,6 +142,8 @@ private:
 
     std::unordered_map<Board,Entry,KeyHasher> table;
 
+    static bool compareBoards(Board b1, Board b2 );
+
 
 public:
 
@@ -149,8 +151,8 @@ public:
 
     Minimax();
 
-    float minimax(Board board, unsigned short depth, float alpha, float beta,Move &move);
-    float minimax_aux(Board board, unsigned short depth, float alpha, float beta);
+    float minimax(Board &board, unsigned short depth, float alpha, float beta,Move &move);
+    float minimax_aux(Board &board, unsigned short depth, float alpha, float beta);
 
 };
 
