@@ -521,11 +521,11 @@ bool Board::is_drop_zone_black(u_char x, u_char y){
 //TODO: better display
 void Board::display(){
 
-    cout << endl << "      |   A     B     C     D     E     F     H     F  " << endl;
+    cout << endl << "      |   A     B     C     D     E     F     G    H  " << endl;
     cout << " -----|------------------------------------------------" << endl;
 
     for(u_char a = 0; a < BOARD_SIZE; ++a){
-        cout << "   " << ((int)a + 1) << "  |";
+        cout << "   " << (int)a << "  |";
 
         for(u_char b = 0; b < BOARD_SIZE; ++b){
             short pos = a * BOARD_SIZE + b;
@@ -534,7 +534,8 @@ void Board::display(){
                 v = 1;
             if(get_piece_black(pos))
                 v = 2;
-            cout<<" | "<< v << " |";
+            if (v) cout<<" | "<< v << " |";
+            else cout<<" |   |";
         }
         cout<<"\n";
     }
