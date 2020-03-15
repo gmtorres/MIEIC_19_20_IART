@@ -603,21 +603,50 @@ void Game::get_move_ai1(){ //makes first move available
     make_move(m,board.current_player);
 }
 
-void Game::get_move_ai2(){ //makes first move available
+void Game::get_move_ai2(){ //minimax from depth 3 but min time is 1000 ms
+    unsigned int depth = 3;
+    int64_t min_time_milli = 1000;
+
     Move m;
     cout<<"Start minimax"<<endl;
+
+    float eval;
     float alpha = -INF, beta = INF;
-    cout<<"EVAL: \n"<<minimax.minimax(board,2,alpha,beta,m)<<endl;
+    auto start = high_resolution_clock::now(); 
+    auto stop = high_resolution_clock::now();
+    while(duration_cast<milliseconds>(stop - start).count() < min_time_milli){
+        eval = minimax.minimax(board,depth++,alpha,beta,m);
+        stop = high_resolution_clock::now();
+    }
+
+    cout<<"EVAL: "<<eval<<"\t DEPTH: "<<depth-1<<endl;
+
+
     cout<<"End minimax"<<endl;
     m.display();cout<<endl;
     make_move(m,board.current_player);
 }
 
-void Game::get_move_ai3(){ //makes first move available
+void Game::get_move_ai3(){ //minimax from depth 6 but min time is 10000 ms
+
+    unsigned int depth = 6;
+    int64_t min_time_milli = 10000;
+
     Move m;
     cout<<"Start minimax"<<endl;
+
+    float eval;
     float alpha = -INF, beta = INF;
-    cout<<"EVAL: \n"<<minimax.minimax(board,5,alpha,beta,m)<<endl;
+    auto start = high_resolution_clock::now(); 
+    auto stop = high_resolution_clock::now();
+    while(duration_cast<milliseconds>(stop - start).count() < min_time_milli){
+        eval = minimax.minimax(board,depth++,alpha,beta,m);
+        stop = high_resolution_clock::now();
+    }
+
+    cout<<"EVAL: "<<eval<<"\t DEPTH: "<<depth-1<<endl;
+
+
     cout<<"End minimax"<<endl;
     m.display();cout<<endl;
     make_move(m,board.current_player);

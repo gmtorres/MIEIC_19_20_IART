@@ -10,7 +10,7 @@ int main(void){
 
     cout<<"       <------  Welcome to Eximo!  ------>\n\n"<<endl;
 
-    Game game = Game(3,1);
+    Game game = Game(0,2);
 
     //
 

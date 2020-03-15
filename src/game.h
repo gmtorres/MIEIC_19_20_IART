@@ -2,6 +2,7 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
+#include <chrono> 
 
 #define BOARD_SIZE 8
 #define INF 1000000
@@ -12,6 +13,7 @@
 #define DROP 4
 
 using namespace std;
+using namespace std::chrono; 
 
 class Move{
 public:
