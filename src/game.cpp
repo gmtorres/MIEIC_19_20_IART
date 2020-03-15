@@ -12,7 +12,7 @@ size_t count_set_bit(ulong n){
 }
 
 void Move::display(bool t=false){
-    cout<<(char)((int)x_orig + 65)<<(int)y_orig+1<<" ->"<<(char)((int)x_dest + 65)<<(int)y_dest+1;
+    cout<<(char)((int)x_orig + 65)<<(int)y_orig<<" ->"<<(char)((int)x_dest + 65)<<(int)y_dest;
     if(t) cout<<"  "<< type;
 }
 
