@@ -12,7 +12,7 @@ size_t count_set_bit(ulong n){
 }
 
 void Move::display(bool t=false){
-    cout<<(int)x_orig<<","<<(int)y_orig<<" ->"<<(int)x_dest<<","<<(int)y_dest;
+    cout<<(char)((int)x_orig + 65)<<(int)y_orig+1<<" ->"<<(char)((int)x_dest + 65)<<(int)y_dest+1;
     if(t) cout<<"  "<< type;
 }
 
@@ -521,7 +521,12 @@ bool Board::is_drop_zone_black(u_char x, u_char y){
 //TODO: better display
 void Board::display(){
 
+    cout << endl << "      |   A     B     C     D     E     F     H     F  " << endl;
+    cout << " -----|------------------------------------------------" << endl;
+
     for(u_char a = 0; a < BOARD_SIZE; ++a){
+        cout << "   " << ((int)a + 1) << "  |";
+
         for(u_char b = 0; b < BOARD_SIZE; ++b){
             short pos = a * BOARD_SIZE + b;
             short v=0;
@@ -574,22 +579,25 @@ void Game::get_move(){
 
 //TODO: parse information based on letter and number, draw the board accordingly
 void Game::get_move_human(){
-    vector<Move> moves = board.get_valid_moves(board.current_player);
+  vector<Move> moves = board.get_valid_moves(board.current_player);
     cout<<"Available moves (#="<<moves.size()<<"): ";
     for(size_t i = 0; i < moves.size();++i){
         Move m = moves[i];
-        cout<<(int)m.x_orig<<","<<(int)m.y_orig<<"->"<<(int)m.x_dest<<","<<(int)m.y_dest<<"   ";
+        cout<<(char)((int)m.x_orig + 65)<<(int)m.y_orig+1<<" ->"<<(char)((int)m.x_dest + 65)<<(int)m.y_dest+1<<"   ";
     }
     cout<<endl;
 
     size_t x_orig=0,y_orig=0,x_dest,y_dest;
+    char x_oring_letter, x_dest_letter;
     if (board.dropPiece == 0) {
-        cout<<"Origin x: "; cin>>x_orig;
-        cout<<"Origin Y: "; cin>>y_orig;
+        cout<<"Origin Letter: "; cin>>x_oring_letter;
+        cout<<"Origin Number: "; cin>>y_orig;
+        x_orig = (int)x_oring_letter - 65;
     }
 
-    cout<<"Destination x: "; cin>>x_dest;
-    cout<<"Destination Y: "; cin>>y_dest;
+    cout<<"Destination Letter: "; cin>>x_dest_letter;
+    cout<<"Destination Number: "; cin>>y_dest;
+    x_dest = (int)x_dest_letter - 65;
     Move m = Move(x_orig,y_orig,x_dest,y_dest);
     bool move = make_move(m,board.current_player);
     if(!move)
