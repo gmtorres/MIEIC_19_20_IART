@@ -2,7 +2,9 @@
 #include <vector>
 #include <algorithm>
 #include <unordered_map>
-#include <chrono> 
+#include <chrono>
+#include <string>
+#include <cctype>
 
 #define BOARD_SIZE 8
 #define INF 1000000

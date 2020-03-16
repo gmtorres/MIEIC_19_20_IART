@@ -525,17 +525,18 @@ void Board::display(){
     cout << " -----|------------------------------------------------" << endl;
 
     for(u_char a = 0; a < BOARD_SIZE; ++a){
-        cout << "   " << (int)a << "  |";
+        cout << "   " << (int)(a+1) << "  |";
 
         for(u_char b = 0; b < BOARD_SIZE; ++b){
             short pos = a * BOARD_SIZE + b;
-            short v=0;
+            char v=0;
             if(get_piece_white(pos))
-                v = 1;
-            if(get_piece_black(pos))
-                v = 2;
-            if (v) cout<<" | "<< v << " |";
-            else cout<<" |   |";
+                v = 'O';
+            else if(get_piece_black(pos))
+                v = 'x';
+            else v = ' ';
+            cout<<" | "<< v << " |";
+           
         }
         cout<<"\n";
     }
@@ -589,16 +590,37 @@ void Game::get_move_human(){
     cout<<endl;
 
     size_t x_orig=0,y_orig=0,x_dest,y_dest;
-    char x_oring_letter, x_dest_letter;
     if (board.dropPiece == 0) {
-        cout<<"Origin Letter: "; cin>>x_oring_letter;
-        cout<<"Origin Number: "; cin>>y_orig;
-        x_orig = (int)x_oring_letter - 65;
+        std::string orig_position;
+        cout<<"Origin Possition: "; cin>>orig_position;
+        while(1){
+            if(orig_position.length() == 2 && isalpha(orig_position[0]) && isdigit(orig_position[1])){
+                break;
+            }
+            else{
+                cout<<"Wrong format -> LETTER NUMBER (eg. F6)\nOrigin Position: ";
+                cin>>orig_position;
+            }
+        }
+        x_orig = (islower(orig_position[0])) ? (int)orig_position[0] - 'a' : (int)orig_position[0] - 'A';
+        y_orig = (int)orig_position[1] - '0' - 1;
     }
 
-    cout<<"Destination Letter: "; cin>>x_dest_letter;
-    cout<<"Destination Number: "; cin>>y_dest;
-    x_dest = (int)x_dest_letter - 65;
+    std::string dest_position;
+    cout<<"Destination Possition: "; cin>>dest_position;
+    while(1){
+        if(dest_position.length() == 2 && isalpha(dest_position[0]) && isdigit(dest_position[1])){
+            break;
+        }
+        else{
+            cout<<"Wrong format -> LETTER NUMBER (eg. F6)\nDestination Position: ";
+            cin>>dest_position;
+        }
+    }
+
+    x_dest = (islower(dest_position[0])) ? (int)dest_position[0] - 'a' : (int)dest_position[0] - 'A';
+    y_dest = (int)dest_position[1] - '0' - 1;
+
     Move m = Move(x_orig,y_orig,x_dest,y_dest);
     bool move = make_move(m,board.current_player);
     if(!move)
@@ -614,6 +636,7 @@ void Game::get_move_ai1(){ //makes first move available
 
 void Game::get_move_ai2(){ //minimax from depth 3 but min time is 1000 ms
     unsigned int depth = 3;
+    unsigned int max_depth = 5;
     int64_t min_time_milli = 1000;
 
     Move m;
@@ -623,7 +646,7 @@ void Game::get_move_ai2(){ //minimax from depth 3 but min time is 1000 ms
     float alpha = -INF, beta = INF;
     auto start = high_resolution_clock::now(); 
     auto stop = high_resolution_clock::now();
-    while(duration_cast<milliseconds>(stop - start).count() < min_time_milli){
+    while(duration_cast<milliseconds>(stop - start).count() < min_time_milli && depth <= max_depth){
         eval = minimax.minimax(board,depth++,alpha,beta,m);
         stop = high_resolution_clock::now();
     }
@@ -639,6 +662,7 @@ void Game::get_move_ai2(){ //minimax from depth 3 but min time is 1000 ms
 void Game::get_move_ai3(){ //minimax from depth 6 but min time is 10000 ms
 
     unsigned int depth = 6;
+    unsigned int max_depth = 8;
     int64_t min_time_milli = 10000;
 
     Move m;
@@ -648,7 +672,7 @@ void Game::get_move_ai3(){ //minimax from depth 6 but min time is 10000 ms
     float alpha = -INF, beta = INF;
     auto start = high_resolution_clock::now(); 
     auto stop = high_resolution_clock::now();
-    while(duration_cast<milliseconds>(stop - start).count() < min_time_milli){
+    while(duration_cast<milliseconds>(stop - start).count() < min_time_milli && depth <= max_depth){
         eval = minimax.minimax(board,depth++,alpha,beta,m);
         stop = high_resolution_clock::now();
     }
