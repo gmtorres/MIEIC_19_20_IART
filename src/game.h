@@ -144,7 +144,7 @@ struct Entry{
 class Minimax{
 private:
 
-    std::unordered_map<Board,Entry,KeyHasher> table;
+    static std::unordered_map<Board,Entry,KeyHasher> table;
 
     static bool compareBoards(Board b1, Board b2 );
 
@@ -155,7 +155,7 @@ public:
 
     Minimax();
 
-    float minimax(Board &board, unsigned short depth, float alpha, float beta,Move &move);
+    float minimax(Board &board, unsigned short depth, float alpha, float beta,Move &move, float &eval, std::chrono::_V2::system_clock::time_point start_time, uint64_t max_time);
     float minimax_aux(Board &board, unsigned short depth, float alpha, float beta);
 
 };
@@ -164,31 +164,30 @@ class Game{
 
 private:
 
-    //bool white_player = 1; //player white or black, player 1 or 2
     int player1 , player2; // 0 - Human;    1 - CPU level 1;    2 - CPU level 2;    3 - CPU level 3;    diferent minimax aproaches, depth, prunning, optimizations
-
-    //int movement_phase; // for moves that is needed more than one phase, placing two pieces, deciding where to eat next, and so on
 
     //unsigned int move_count;
 
-    void find_best_move();
-
-
+    bool menu = true;
 
 public:
 
     Board board;
     Minimax minimax;
 
-    Game(int player1Mode, int player2Mode);
+    Game(bool menu, int player1 = 0, int player2 = 0);
 
     void get_move();
     void get_move_human();
     void get_move_ai1();
     void get_move_ai2();
     void get_move_ai3();
+
+    void get_move_ai(unsigned int min_depth, unsigned int max_depth, int64_t min_time_milli, int64_t max_time_milli);
+
     bool make_move(Move move, bool white_player);
 
+    void game_menu();
     void game_loop();
 
     void display();    

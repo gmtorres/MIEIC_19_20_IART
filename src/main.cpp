@@ -8,9 +8,8 @@ using namespace std::chrono;
 
 int main(void){
 
-    cout<<"       <------  Welcome to Eximo!  ------>\n\n"<<endl;
 
-    Game game = Game(0,3);
+    Game game = Game(false,0,2);
 
     //
 
@@ -18,7 +17,7 @@ int main(void){
 
     game.game_loop();
     //game.get_move_ai3();
-    //game.get_move_ai2();
+    //game.get_move_ai3();
 
     auto stop = high_resolution_clock::now();
 

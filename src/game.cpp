@@ -12,7 +12,7 @@ size_t count_set_bit(ulong n){
 }
 
 void Move::display(bool t=false){
-    cout<<(char)((int)x_orig + 65)<<(int)y_orig<<" ->"<<(char)((int)x_dest + 65)<<(int)y_dest;
+    cout<<(char)((int)x_orig + 65)<<(int)y_orig +1 <<" ->"<<(char)((int)x_dest + 65)<<(int)y_dest+1;
     if(t) cout<<"  "<< type;
 }
 
@@ -546,7 +546,10 @@ void Board::display(){
 
 /*--------------------- GAME ---------------------*/
 
-Game::Game(int player1Mode, int player2Mode) : player1(player1Mode) , player2(player2Mode){
+Game::Game(bool mn, int p1, int p2){
+    menu = mn;
+    player1 = p1;
+    player2 = p2;
     board = Board();
     minimax = Minimax();
 }
@@ -628,83 +631,91 @@ void Game::get_move_human(){
 }
 
 void Game::get_move_ai1(){ //makes first move available
-    vector<Move> moves = board.get_valid_moves(board.current_player);
-    Move m = moves[0];
-    m.display();cout<<endl;
-    make_move(m,board.current_player);
+    get_move_ai(1,1,1000,1001);
 }
 
 void Game::get_move_ai2(){ //minimax from depth 3 but min time is 1000 ms
-    unsigned int depth = 3;
-    unsigned int max_depth = 5;
-    int64_t min_time_milli = 1000;
-
-    Move m;
-    cout<<"Start minimax"<<endl;
-
-    float eval;
-    float alpha = -INF, beta = INF;
-    auto start = high_resolution_clock::now(); 
-    auto stop = high_resolution_clock::now();
-    while(duration_cast<milliseconds>(stop - start).count() < min_time_milli && depth <= max_depth){
-        eval = minimax.minimax(board,depth++,alpha,beta,m);
-        stop = high_resolution_clock::now();
-    }
-
-    cout<<"EVAL: "<<eval<<"\t DEPTH: "<<depth-1<<endl;
-
-
-    cout<<"End minimax"<<endl;
-    m.display();cout<<endl;
-    make_move(m,board.current_player);
+    get_move_ai(3,5,800,1500);
 }
 
 void Game::get_move_ai3(){ //minimax from depth 6 but min time is 10000 ms
+    get_move_ai(6,9,8000,15000);
+}
 
-    unsigned int depth = 6;
-    unsigned int max_depth = 8;
-    int64_t min_time_milli = 10000;
+void Game::get_move_ai(unsigned int min_depth, unsigned int max_depth, int64_t min_time_milli, int64_t max_time_milli){
 
+    unsigned int depth = min_depth;
     Move m;
-    cout<<"Start minimax"<<endl;
-
-    float eval;
+    float eval = 0;
     float alpha = -INF, beta = INF;
-    auto start = high_resolution_clock::now(); 
+    cout<<"Calculating...";
+    auto start = high_resolution_clock::now();
+    depth = min_depth++;
+    minimax.minimax(board,depth,alpha,beta,m,eval,start,max_time_milli);
     auto stop = high_resolution_clock::now();
-    while(duration_cast<milliseconds>(stop - start).count() < min_time_milli && depth <= max_depth){
-        eval = minimax.minimax(board,depth++,alpha,beta,m);
+    while(duration_cast<milliseconds>(stop - start).count() < min_time_milli && min_depth <= max_depth){
+        Move m_t;
+        float eval_t;
+        depth = min_depth++;
+        if(minimax.minimax(board,depth,alpha,beta,m_t,eval_t,start,max_time_milli) == 0){
+            if((board.current_player == 1 && eval_t > eval) || (board.current_player == 0 && eval_t < eval)){
+                eval = eval_t;
+                m = m_t;
+            }
+            break;
+        }else{
+            eval = eval_t;
+            m = m_t;
+        }
         stop = high_resolution_clock::now();
     }
-
-    cout<<"EVAL: "<<eval<<"\t DEPTH: "<<depth-1<<endl;
-
-
-    cout<<"End minimax"<<endl;
-    m.display();cout<<endl;
+    cout<<"\n";m.display();cout<<"\teval: "<<eval<<"\t depth: "<<depth<<endl;
     make_move(m,board.current_player);
+}
+
+
+void Game::game_menu(){
+
+        
+    cout<<"       <------  Welcome to Eximo!  ------>\n\n"<<endl;
+    cout<<"       Modes:\n";
+    cout<<"              0 - Human\n";
+    cout<<"              1 - AI Level1 1 depth\n";
+    cout<<"              2 - AI Level2 3-5 depth\n";
+    cout<<"              3 - AI LEvel3 5-8 depth\n";
+    cout<<"\n       Input -1 to exit\n";
+    int r;
+    cout<<"       Player 1 Mode: "; cin>>r; if(r == -1) exit(0); else player1 = r;
+    cout<<"       Player 2 Mode: "; cin>>r; if(r == -1) exit(0); else player2 = r;
+
 }
 
 void Game::game_loop(){
 
-    display(); 
+    //while(true){
 
-    while (true)
-    {   
-        //cout<<board.board_white<<endl;cout<<board.board_black<<endl;cout<<board.current_player<<endl;cout<<board.jumpingMove<<endl;cout<<board.capturingMove<<endl;
-        if(board.end_game(board.current_player)){
-            cout<<"END OF GAME  ----- PLAYER "<<(board.gameover(0) ? 1 : 2)<<" WON"<<endl;
-            cout<<board.board_white<<endl;
-            cout<<board.board_black<<endl;
-            cout<<board.current_player<<endl;
-            cout<<board.jumpingMove<<endl;
-            cout<<board.capturingMove<<endl;
-            break;
-        }
-        get_move();
+        if(menu)
+            game_menu();
+
         display(); 
-    }
-    
+
+        while (true){   
+            //cout<<board.board_white<<endl;cout<<board.board_black<<endl;cout<<board.current_player<<endl;cout<<board.jumpingMove<<endl;cout<<board.capturingMove<<endl;
+            if(board.end_game(board.current_player)){
+                cout<<"END OF GAME  ----- PLAYER "<<(board.gameover(0) ? 1 : 2)<<" WON"<<endl;
+                /*cout<<board.board_white<<endl;
+                cout<<board.board_black<<endl;
+                cout<<board.current_player<<endl;
+                cout<<board.jumpingMove<<endl;
+                cout<<board.capturingMove<<endl;*/
+                board = Board();
+                break;
+            }
+            get_move();
+            display(); 
+        }
+
+    //}
 
 }
 
@@ -717,10 +728,20 @@ void Game::display(){
 
 /*-------------------- MINIMAX --------------------*/
 
+std::unordered_map<Board,Entry,KeyHasher> Minimax::table;
 
 bool Minimax::compareBoards(const Board b1, const Board b2 ){
-    float v1 = b1.eval();
-    float v2 = b2.eval();
+    float v1,v2;
+    auto look1 = table.find(b1);
+    auto look2 = table.find(b2);
+    if(look1 != table.end()) 
+        v1 = look1->second.eval;
+    else 
+        v1 = b1.eval();
+    if(look2 != table.end()) 
+        v2 = look2->second.eval;
+    else 
+        v2 = b2.eval();
     return (v1 < v2);
 }
 
@@ -728,7 +749,7 @@ bool Minimax::compareBoards(const Board b1, const Board b2 ){
 Minimax::Minimax(){
 }
 
-float Minimax::minimax(Board &board, unsigned short depth, float alpha, float beta, Move &move){
+float Minimax::minimax(Board &board, unsigned short depth, float alpha, float beta, Move &move,float &eval, std::chrono::_V2::system_clock::time_point start_time, uint64_t max_time){
 
     auto look = table.find(board);
     if(look != table.end() && look->second.depth >= depth){
@@ -745,50 +766,59 @@ float Minimax::minimax(Board &board, unsigned short depth, float alpha, float be
 
     auto nextBoardsEnd = nextBoards.end();
     if(board.current_player){
-        float maxEval = -INF;
+        eval = -INF;
         for(auto it = nextBoards.begin(); it != nextBoardsEnd; ++it){
-            float eval = minimax_aux(*it, depth - (board.current_player != it->current_player ? 1 : 0) , alpha, beta);
-            if(maxEval < eval){
-                maxEval = eval;
+            float eval_t = minimax_aux(*it, depth - (board.current_player != it->current_player ? 1 : 0) , alpha, beta);
+            if(eval < eval_t){
+                eval = eval_t;
                 move = (*it).last_move;
             }
-            alpha = (alpha > eval) ? alpha : eval;
+            alpha = (alpha > eval_t) ? alpha : eval_t;
             if(beta <= alpha)
                 break;
+
+            auto stop_time = high_resolution_clock::now();
+            if(duration_cast<milliseconds>(stop_time - start_time).count() > (long int)max_time){
+                return 0;
+            }
         }
         auto entry = table.find(board);
         if(entry == table.end() || entry->second.depth < depth){
             Entry table_entry; 
-            table_entry.eval = maxEval;
+            table_entry.eval = eval;
             table_entry.depth = depth;
             table_entry.alpha = alpha;
             table_entry.beta = beta;
             table[board] = table_entry;
         }
-        return maxEval;
+        return 1;
     }
     else{
-        float minEval = INF;
+        eval = INF;
         for(auto it = nextBoards.begin(); it != nextBoardsEnd; ++it){
-            float eval = minimax_aux(*it, depth - (board.current_player != it->current_player ? 1 : 0), alpha, beta);
-            if(minEval > eval){
-                minEval = eval;
+            float eval_t = minimax_aux(*it, depth - (board.current_player != it->current_player ? 1 : 0), alpha, beta);
+            if(eval > eval_t){
+                eval = eval_t;
                 move = (*it).last_move;
             }
-            beta = (beta < eval) ? beta : eval;
+            beta = (beta < eval_t) ? beta : eval_t;
             if(beta <= alpha)
                 break;
+            auto stop_time = high_resolution_clock::now();
+            if(duration_cast<milliseconds>(stop_time - start_time).count() > (long int)max_time){
+                return 0;
+            }
         }
         auto entry = table.find(board);
         if(entry == table.end() || entry->second.depth < depth){
             Entry table_entry; 
-            table_entry.eval = minEval;
+            table_entry.eval = eval;
             table_entry.depth = depth;
             table_entry.alpha = alpha;
             table_entry.beta = beta;
             table[board] = table_entry;
         }
-        return minEval;
+        return 1;
     }
 }
 
