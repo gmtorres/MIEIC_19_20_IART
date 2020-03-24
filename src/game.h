@@ -52,9 +52,9 @@ public: //private:
 
     Move last_move;
 
-    float evaluate_board1();
-    float evaluate_board2();
-    float evaluate_board3();
+    float evaluate_board1() const;
+    float evaluate_board2() const;
+    float evaluate_board3() const;
 
     bool get_piece_white(u_char pos);
     bool get_piece_white(u_char x, u_char y);
@@ -93,6 +93,9 @@ public: //private:
 public:
 
     bool current_player = 1;
+
+    int player1_eval = 3;
+    int player2_eval = 3;
 
     Board();
     Board(const Board &old);
@@ -151,6 +154,8 @@ private:
 
 public:
 
+    float (* eval)() = NULL;
+
     size_t cuts;
 
     Minimax();
@@ -166,7 +171,7 @@ private:
 
     int player1 , player2; // 0 - Human;    1 - CPU level 1;    2 - CPU level 2;    3 - CPU level 3;    diferent minimax aproaches, depth, prunning, optimizations
 
-    //unsigned int move_count;
+    unsigned int move_count = 0;
 
     bool menu = true;
 

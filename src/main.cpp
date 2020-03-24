@@ -9,7 +9,7 @@ using namespace std::chrono;
 int main(void){
 
 
-    Game game = Game(false,0,2);
+    Game game = Game(true,1,2);
 
     //
 
@@ -23,7 +23,7 @@ int main(void){
 
     auto duration = duration_cast<milliseconds>(stop - start); 
   
-    cout << "Time taken by function: "
+    cout << "Time taken by game: "
          << duration.count() << " milliseconds" << endl; 
 
     return 0;

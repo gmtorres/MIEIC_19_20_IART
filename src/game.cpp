@@ -39,6 +39,8 @@ Board::Board(const Board &old){
     current_player = old.current_player;
     dropPiece = old.dropPiece;
     last_move = old.last_move;
+    player1_eval = old.player1_eval;
+    player2_eval = old.player2_eval;
 }
 
 bool Board::operator==(const Board& b2)const{
@@ -62,13 +64,37 @@ vector<Board> Board::get_valid_boards(bool white_player){
     return boards;
 }
 
-float Board::eval() const{ // positive favours white, negative favours black
+float Board::evaluate_board1() const{ //counts material
+    float score = 0;
 
-    /*if(gameover(0))
-        return 1000;
-    else if(gameover(1))
-        return -1000;*/
+    ulong b1 = board_white, b2 = board_black;
+    while (b1 != 0 || b2 != 0){
+        score = score + (b1 & 1L) - (b2 & 1L);
+        b1 = b1 >> 1;
+        b2 = b2 >> 1; 
+    }
+    return score;
+}
 
+float Board::evaluate_board2() const{ //counst material and tries to ocupy sides and reach the last line, more agressive
+    float score = 0;
+
+    ulong b1 = board_white, b2 = board_black;
+    while (b1 != 0 || b2 != 0){
+        score = score + (b1 & 1L) - (b2 & 1L);
+        b1 = b1 >> 1;
+        b2 = b2 >> 1; 
+    }
+
+    score += 1.5*count_set_bit(board_white & 0xFF00); // bits na penultima fila para ser convertidos
+    score -= 1.5*count_set_bit(board_black & 0xFF000000000000L); // bits na penultima fila para seer convertidos
+    score += 1.125*count_set_bit(board_white & 0x8181818181818181); // board sides
+    score -= 1.125*count_set_bit(board_black & 0x8181818181818181); //board sides
+
+    return score;
+}
+
+float Board::evaluate_board3() const{ //counts material and board formation
     float score = 0;
 
     ulong b1 = board_white, b2 = board_black;
@@ -89,6 +115,29 @@ float Board::eval() const{ // positive favours white, negative favours black
 
 
     return score;
+}
+
+float Board::eval() const{ // positive favours white, negative favours black
+    uint8_t player_eval;
+    if(current_player == 1) 
+        player_eval = player1_eval;
+    else 
+        player_eval = player2_eval;
+
+    switch (player_eval){
+        case 1:
+            cout<<"EVAL OF PLAYER_mehos  1 "<<endl;
+            return evaluate_board1();
+        case 2:
+            cout<<"EVAL OF PLAYER_mehos  2 "<<endl;
+            return evaluate_board2();
+        case 3:
+            cout<<"EVAL OF PLAYER_mehos  3 "<<endl;
+            return evaluate_board3();
+        default:
+            return 0;
+    }
+    return 0;
 }
 
 bool Board::gameover(bool white_player){ // check if a player has lost the game
@@ -630,7 +679,7 @@ void Game::get_move_human(){
         cout<<"Invalid move, try another one"<<endl;
 }
 
-void Game::get_move_ai1(){ //makes first move available
+void Game::get_move_ai1(){ //makes best move in depth 1
     get_move_ai(1,1,1000,1001);
 }
 
@@ -643,20 +692,43 @@ void Game::get_move_ai3(){ //minimax from depth 6 but min time is 10000 ms
 }
 
 void Game::get_move_ai(unsigned int min_depth, unsigned int max_depth, int64_t min_time_milli, int64_t max_time_milli){
+    uint8_t player_eval;
+    if(board.current_player == 1) 
+        player_eval = board.player1_eval;
+    else 
+        player_eval = board.player2_eval;
+    switch (player_eval){
+        case 1:
+            cout<<"EVAL OF PLAYER_mehos  1 "<<endl;
+            minimax.eval = *board.evaluate_board1;
+            break;
+        case 2:
+            cout<<"EVAL OF PLAYER_mehos  2 "<<endl;
+            minimax.eval = *board.evaluate_board2;
+            break;
+        case 3:
+            cout<<"EVAL OF PLAYER_mehos  3 "<<endl;
+            minimax.eval = *board.evaluate_board3;
+            break;
+        default:
+            minimax.eval = *board.evaluate_board3;
+            break;
+    }
 
-    unsigned int depth = min_depth;
+    unsigned int depth;
     Move m;
     float eval = 0;
     float alpha = -INF, beta = INF;
     cout<<"Calculating...";
     auto start = high_resolution_clock::now();
-    depth = min_depth++;
+    depth = min_depth;
     minimax.minimax(board,depth,alpha,beta,m,eval,start,max_time_milli);
+    depth++;
     auto stop = high_resolution_clock::now();
-    while(duration_cast<milliseconds>(stop - start).count() < min_time_milli && min_depth <= max_depth){
+    while(duration_cast<milliseconds>(stop - start).count() < min_time_milli && depth <= max_depth){
         Move m_t;
         float eval_t;
-        depth = min_depth++;
+        
         if(minimax.minimax(board,depth,alpha,beta,m_t,eval_t,start,max_time_milli) == 0){
             if((board.current_player == 1 && eval_t > eval) || (board.current_player == 0 && eval_t < eval)){
                 eval = eval_t;
@@ -668,8 +740,9 @@ void Game::get_move_ai(unsigned int min_depth, unsigned int max_depth, int64_t m
             m = m_t;
         }
         stop = high_resolution_clock::now();
+        depth++;
     }
-    cout<<"\n";m.display();cout<<"\teval: "<<eval<<"\t depth: "<<depth<<endl;
+    cout<<"\n";m.display();cout<<"\teval: "<<eval<<"\t depth: "<<depth - 1<<endl;
     make_move(m,board.current_player);
 }
 
@@ -683,16 +756,29 @@ void Game::game_menu(){
     cout<<"              1 - AI Level1 1 depth\n";
     cout<<"              2 - AI Level2 3-5 depth\n";
     cout<<"              3 - AI LEvel3 5-8 depth\n";
-    cout<<"\n       Input -1 to exit\n";
+    cout<<"\n         Input -1 to exit\n\n\n";
     int r;
     cout<<"       Player 1 Mode: "; cin>>r; if(r == -1) exit(0); else player1 = r;
     cout<<"       Player 2 Mode: "; cin>>r; if(r == -1) exit(0); else player2 = r;
+    if(player1 != 0 || player2 != 0){
+        cout<<"\n\n       Evaluation of the board:\n";
+        cout<<"              1 - Eval Level1 \n";
+        cout<<"              2 - Eval Level2\n";
+        cout<<"              3 - Eval LEvel3\n";
+        cout<<"\n         Input -1 to exit\n\n\n";
+        int r;
+        if(player1 != 0){ cout<<"       Player 1 Eval: "; cin>>r; if(r == -1) exit(0); else board.player1_eval = r;}
+        if(player2 != 0){ cout<<"       Player 2 Eval: "; cin>>r; if(r == -1) exit(0); else board.player2_eval = r;}
+        //cout<<board.player1_eval<<"\t"<<board.player2_eval<<endl;
+    }
+
+    move_count = 0;
 
 }
 
 void Game::game_loop(){
 
-    //while(true){
+    //while(true){S
 
         if(menu)
             game_menu();
@@ -703,15 +789,14 @@ void Game::game_loop(){
             //cout<<board.board_white<<endl;cout<<board.board_black<<endl;cout<<board.current_player<<endl;cout<<board.jumpingMove<<endl;cout<<board.capturingMove<<endl;
             if(board.end_game(board.current_player)){
                 cout<<"END OF GAME  ----- PLAYER "<<(board.gameover(0) ? 1 : 2)<<" WON"<<endl;
-                /*cout<<board.board_white<<endl;
-                cout<<board.board_black<<endl;
-                cout<<board.current_player<<endl;
-                cout<<board.jumpingMove<<endl;
-                cout<<board.capturingMove<<endl;*/
+                cout<<"Statistic:\n";
+                cout<<"Move count : " << move_count<<endl;
+                cout<<"Evaluation :" << board.evaluate_board3()<<endl;
                 board = Board();
                 break;
             }
             get_move();
+            move_count++;
             display(); 
         }
 
