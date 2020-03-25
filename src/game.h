@@ -109,7 +109,7 @@ public:
     bool gameover(bool white_player);
     bool end_game(bool white_player);
 
-    float eval() const;
+    float eval(int eval_fuc) const;
 
     void display();
 
@@ -138,10 +138,12 @@ struct KeyHasher{
 };
 
 struct Entry{
-    float eval;
+    //float eval;
     size_t depth;
     float alpha;
     float beta; 
+    bool eval_valid [3] = {false,false,false};
+    float evals[3];
 };
 
 class Minimax{
@@ -154,13 +156,13 @@ private:
 
 public:
 
-    float (* eval)() = NULL;
+    static int eval_fuc;
 
     size_t cuts;
 
     Minimax();
 
-    float minimax(Board &board, unsigned short depth, float alpha, float beta,Move &move, float &eval, std::chrono::_V2::system_clock::time_point start_time, uint64_t max_time);
+    float minimax(Board &board, unsigned short depth, float alpha, float beta,Move &move, float &eval, std::chrono::_V2::system_clock::time_point start_time, uint64_t max_time, int eval_fuc);
     float minimax_aux(Board &board, unsigned short depth, float alpha, float beta);
 
 };
@@ -174,13 +176,14 @@ private:
     unsigned int move_count = 0;
 
     bool menu = true;
+    bool show_b;
 
 public:
 
     Board board;
     Minimax minimax;
 
-    Game(bool menu, int player1 = 0, int player2 = 0);
+    Game(bool menu, int player1 = 0, int player2 = 0, int eval_m1 = 0, int eval_m2 = 0, bool display = true);
 
     void get_move();
     void get_move_human();
