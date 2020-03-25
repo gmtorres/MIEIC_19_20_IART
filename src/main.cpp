@@ -9,7 +9,7 @@ using namespace std::chrono;
 int main(void){
 
 
-    Game game = Game(true,1,2,1,3,true);
+    Game game = Game(false,2,2,3,3,false);
 
     //
 
@@ -18,6 +18,9 @@ int main(void){
     game.game_loop();
     //game.get_move_ai3();
     //game.get_move_ai3();
+    /*float alpha = -INF, beta = INF,eval;
+    Move m;
+    game.minimax.minimax(game.board,7,alpha,beta,m,eval,start,15000000000, 3 );*/
 
     auto stop = high_resolution_clock::now();
 
