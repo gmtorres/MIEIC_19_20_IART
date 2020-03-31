@@ -241,6 +241,23 @@ bool Board::any_move_available(bool white_player){
     return false;
 }
 
+void Board::get_valid_moves_2(ulong board,vector<Move> &moves, bool &capture, bool white_player, u_char dx, u_char dy){
+    u_char x = 0;
+    u_char y = 0;
+    while(board != 0){
+        if(board & 1L){
+            if(white_player) get_valid_moves_aux(moves,Move(x,y,x+dx,y+dy),capture,true);
+            else get_valid_moves_aux(moves,Move(x,y,x+dx,y-dy),capture,false);
+        }
+        ++x;
+        if(x == BOARD_SIZE){
+            x = 0;
+            ++y;
+        }
+        board = board >> 1;
+    }
+}
+
 vector<Move> Board::get_valid_moves(bool white_player){
     vector<Move> moves = vector<Move>();
 
@@ -251,6 +268,7 @@ vector<Move> Board::get_valid_moves(bool white_player){
     bool capture_possible = false;
 
     if(dropPiece == 0){
+        /*
         u_char x = 0;
         u_char y = 0;
         while(board != 0){
@@ -283,7 +301,19 @@ vector<Move> Board::get_valid_moves(bool white_player){
                 ++y;
             }
             board = board >> 1;
+        }*/
+        get_valid_moves_2(board,moves,capture_possible,white_player,-2,0);
+        get_valid_moves_2(board,moves,capture_possible,white_player,+2,0);
+        get_valid_moves_2(board,moves,capture_possible,white_player,-2,-2);
+        get_valid_moves_2(board,moves,capture_possible,white_player,+2,-2);
+        get_valid_moves_2(board,moves,capture_possible,white_player,0,-2);
+        if(capture_possible == false){
+            get_valid_moves_2(board,moves,capture_possible,white_player,-1,-1);
+            get_valid_moves_2(board,moves,capture_possible,white_player,0,-1);
+            get_valid_moves_2(board,moves,capture_possible,white_player,+1,-1);
         }
+
+
     }else{
         for(u_char y = 0; y < 2; ++y){
             for(u_char x = 1; x < BOARD_SIZE; ++x){

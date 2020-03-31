@@ -103,6 +103,7 @@ public:
     bool move_piece(const Move &move, bool white_player, int valid);
     
     vector <Move> get_valid_moves(bool white_player);
+    void get_valid_moves_2(ulong board,vector<Move> &moves, bool &capture, bool white_player, u_char dx, u_char dy);
     vector <Board> get_valid_boards(bool white_player);
     bool any_move_available(bool white_player);
 
