@@ -778,7 +778,7 @@ void Game::game_menu(){
     cout<<"              0 - Human\n";
     cout<<"              1 - AI Level1 1 depth\n";
     cout<<"              2 - AI Level2 3-5 depth\n";
-    cout<<"              3 - AI LEvel3 5-8 depth\n";
+    cout<<"              3 - AI LEvel3 6-8 depth\n";
     cout<<"\n         Input -1 to exit\n\n\n";
     int r;
     cout<<"       Player 1 Mode: "; cin>>r; if(r == -1) exit(0); else player1 = r;

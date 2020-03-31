@@ -9,7 +9,7 @@ using namespace std::chrono;
 int main(void){
 
 
-    Game game = Game(false,3,3,3,3,false);
+    Game game = Game(true,3,3,3,3,true);
 
     //
 
