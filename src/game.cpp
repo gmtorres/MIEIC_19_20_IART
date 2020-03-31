@@ -641,13 +641,22 @@ void Game::get_move_human(){
         Move m = moves[i];
         cout<<(char)((int)m.x_orig + 65)<<(int)m.y_orig+1<<" ->"<<(char)((int)m.x_dest + 65)<<(int)m.y_dest+1<<"   ";
     }
-    cout<<endl;
+    cout<<endl<<"Write HELP for a move sugestion"<<endl;
 
     size_t x_orig=0,y_orig=0,x_dest,y_dest;
     if (board.dropPiece == 0) {
         std::string orig_position;
         cout<<"Origin Possition: "; cin>>orig_position;
         while(1){
+            if(orig_position == "HELP" || orig_position == "help" ){
+                Move m;
+                float eval = 0;
+                float alpha = -INF, beta = INF;
+                auto start = high_resolution_clock::now();
+                cout<<"Searching for a move...\n";
+                minimax.minimax(board,5,alpha,beta,m,eval,start,100000, board.current_player ? board.player1_eval : board.player2_eval );
+                cout<<"Sugestion : ";m.display();cout<<endl;
+            }
             if(orig_position.length() == 2 && isalpha(orig_position[0]) && isdigit(orig_position[1])){
                 break;
             }
