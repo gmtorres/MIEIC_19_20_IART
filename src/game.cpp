@@ -118,6 +118,8 @@ float Board::evaluate_board3() const{ //counts material and board formation
 }
 
 float Board::eval(int eval) const{ // positive favours white, negative favours black
+    if(board_black == 0) return 1000;
+    if(board_white == 0) return -1000;
     switch (eval){
         case 1:
             //cout<<"EVAL OF PLAYER_mehos  1 "<<endl;
@@ -256,22 +258,23 @@ vector<Move> Board::get_valid_moves(bool white_player){
                 
                 if(white_player){
                     get_valid_moves_aux(moves,Move(x,y,x-2,y),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x+2,y),capture_possible,true);
                     get_valid_moves_aux(moves,Move(x,y,x-2,y-2),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x+2,y-2),capture_possible,true);
+                    get_valid_moves_aux(moves,Move(x,y,x,y-2),capture_possible,true);
                     get_valid_moves_aux(moves,Move(x,y,x-1,y-1),capture_possible,true);
                     get_valid_moves_aux(moves,Move(x,y,x,y-1),capture_possible,true);
-                    get_valid_moves_aux(moves,Move(x,y,x,y-2),capture_possible,true);
                     get_valid_moves_aux(moves,Move(x,y,x+1,y-1),capture_possible,true);
-                    get_valid_moves_aux(moves,Move(x,y,x+2,y-2),capture_possible,true);
-                    get_valid_moves_aux(moves,Move(x,y,x+2,y),capture_possible,true);
+                    
                 }else if(!white_player){
                     get_valid_moves_aux(moves,Move(x,y,x-2,y),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x+2,y),capture_possible,false);
                     get_valid_moves_aux(moves,Move(x,y,x-2,y+2),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x+2,y+2),capture_possible,false);
+                    get_valid_moves_aux(moves,Move(x,y,x,y+2),capture_possible,false);
                     get_valid_moves_aux(moves,Move(x,y,x-1,y+1),capture_possible,false);
                     get_valid_moves_aux(moves,Move(x,y,x,y+1),capture_possible,false);
-                    get_valid_moves_aux(moves,Move(x,y,x,y+2),capture_possible,false);
                     get_valid_moves_aux(moves,Move(x,y,x+1,y+1),capture_possible,false);
-                    get_valid_moves_aux(moves,Move(x,y,x+2,y+2),capture_possible,false);
-                    get_valid_moves_aux(moves,Move(x,y,x+2,y),capture_possible,false);
                 }
             }
             ++x;
@@ -704,10 +707,10 @@ void Game::get_move_ai(unsigned int min_depth, unsigned int max_depth, int64_t m
     depth++;
     auto stop = high_resolution_clock::now();
     while(duration_cast<milliseconds>(stop - start).count() < min_time_milli && depth <= max_depth){
-        Move m_t;
-        float eval_t;
+        //Move m_t;
+        //float eval_t;
         
-        if(minimax.minimax(board,depth,alpha,beta,m_t,eval_t,start,max_time_milli, board.current_player ? board.player1_eval : board.player2_eval ) == 0){
+        /*if(minimax.minimax(board,depth,alpha,beta,m_t,eval_t,start,max_time_milli, board.current_player ? board.player1_eval : board.player2_eval ) == 0){
             if((board.current_player == 1 && eval_t > eval) || (board.current_player == 0 && eval_t < eval)){
                 eval = eval_t;
                 m = m_t;
@@ -716,7 +719,8 @@ void Game::get_move_ai(unsigned int min_depth, unsigned int max_depth, int64_t m
         }else{
             eval = eval_t;
             m = m_t;
-        }
+        }*/
+        minimax.minimax(board,depth,alpha,beta,m,eval,start,max_time_milli, board.current_player ? board.player1_eval : board.player2_eval );
         stop = high_resolution_clock::now();
         depth++;
     }
@@ -820,6 +824,8 @@ float Minimax::minimax(Board &board, unsigned short depth, float alpha, float be
 
     eval_fuc = eval_f;
 
+    unsigned short p_depth = depth;
+
     auto look = table.find(board);
     if(look != table.end() && look->second.depth >= depth){
         //return look->second.eval;
@@ -837,7 +843,7 @@ float Minimax::minimax(Board &board, unsigned short depth, float alpha, float be
     if(board.current_player){
         eval = -INF;
         for(auto it = nextBoards.begin(); it != nextBoardsEnd; ++it){
-            float eval_t = minimax_aux(*it, depth - (board.current_player != it->current_player ? 1 : 0) , alpha, beta);
+            float eval_t = minimax_aux(*it, p_depth - (board.current_player != it->current_player ? 1 : 0) , alpha, beta);
             if(eval < eval_t){
                 eval = eval_t;
                 move = (*it).last_move;
@@ -848,7 +854,7 @@ float Minimax::minimax(Board &board, unsigned short depth, float alpha, float be
 
             auto stop_time = high_resolution_clock::now();
             if(duration_cast<milliseconds>(stop_time - start_time).count() > (long int)max_time){
-                return 0;
+                p_depth = 1;
             }
         }
         auto entry = table.find(board);
@@ -869,7 +875,7 @@ float Minimax::minimax(Board &board, unsigned short depth, float alpha, float be
     else{
         eval = INF;
         for(auto it = nextBoards.begin(); it != nextBoardsEnd; ++it){
-            float eval_t = minimax_aux(*it, depth - (board.current_player != it->current_player ? 1 : 0), alpha, beta);
+            float eval_t = minimax_aux(*it, p_depth - (board.current_player != it->current_player ? 1 : 0), alpha, beta);
             if(eval > eval_t){
                 eval = eval_t;
                 move = (*it).last_move;
@@ -879,7 +885,7 @@ float Minimax::minimax(Board &board, unsigned short depth, float alpha, float be
                 break;
             auto stop_time = high_resolution_clock::now();
             if(duration_cast<milliseconds>(stop_time - start_time).count() > (long int)max_time){
-                return 0;
+                p_depth = 1;
             }
         }
         auto entry = table.find(board);
