@@ -121,13 +121,13 @@ float Board::eval(int eval) const{ // positive favours white, negative favours b
     if(board_black == 0) return 1000;
     if(board_white == 0) return -1000;
     switch (eval){
-        case 1:
+        case 0:
             //cout<<"EVAL OF PLAYER_mehos  1 "<<endl;
             return evaluate_board1();
-        case 2:
+        case 1:
             //cout<<"EVAL OF PLAYER_mehos  2 "<<endl;
             return evaluate_board2();
-        case 3:
+        case 2  :
             //cout<<"EVAL OF PLAYER_mehos  3 "<<endl;
             return evaluate_board3();
         default:
@@ -861,14 +861,15 @@ Minimax::Minimax(){
 
 float Minimax::minimax(Board &board, unsigned short depth, float alpha, float beta, Move &move,float &eval, std::chrono::_V2::system_clock::time_point start_time, uint64_t max_time, int eval_f){
 
-    eval_fuc = eval_f;
+    eval_fuc = eval_f - 1;
+
+    for(auto itr = table.begin();itr != table.end();){
+        if(itr->second.age-- == 0){
+            itr = table.erase(itr);
+        }else itr++;
+    }
 
     unsigned short p_depth = depth;
-
-    auto look = table.find(board);
-    if(look != table.end() && look->second.depth >= depth){
-        //return look->second.eval;
-    }
 
     if(depth == 0 || board.end_game(board.current_player))
         return board.eval(eval_fuc);
@@ -897,17 +898,27 @@ float Minimax::minimax(Board &board, unsigned short depth, float alpha, float be
             }
         }
         auto entry = table.find(board);
-        if(entry == table.end() || entry->second.depth < depth){
+        if(entry == table.end()){
             Entry table_entry; 
-            table_entry.eval_valid[eval_fuc - 1] = true;
-            table_entry.evals[eval_fuc - 1] = eval;
-            table_entry.depth = depth;
-            table_entry.alpha = alpha;
-            table_entry.beta = beta;
+            table_entry.eval_valid[eval_fuc] = true;
+            table_entry.evals[eval_fuc] = eval;
+            table_entry.depth[eval_fuc] = depth;
+            table_entry.alpha[eval_fuc] = alpha;
+            table_entry.beta[eval_fuc] = beta;
             table[board] = table_entry;
-        }else if(entry != table.end() && entry->second.depth == depth && entry->second.eval_valid[eval_fuc-1] == false){
-            entry->second.eval_valid[eval_fuc-1] = true;
-            entry->second.evals[eval_fuc-1] = eval;
+        }else{
+            if(entry->second.eval_valid[eval_fuc] && entry->second.depth[eval_fuc] < depth){
+                entry->second.evals[eval_fuc] = eval;
+                entry->second.depth[eval_fuc] = depth;
+                entry->second.alpha[eval_fuc] = alpha;
+                entry->second.beta[eval_fuc] = beta;
+            }else if(entry->second.eval_valid[eval_fuc] == false){
+                entry->second.eval_valid[eval_fuc] = true;
+                entry->second.evals[eval_fuc] = eval;
+                entry->second.depth[eval_fuc] = depth;
+                entry->second.alpha[eval_fuc] = alpha;
+                entry->second.beta[eval_fuc] = beta;
+            }
         }
         return 1;
     }
@@ -928,17 +939,27 @@ float Minimax::minimax(Board &board, unsigned short depth, float alpha, float be
             }
         }
         auto entry = table.find(board);
-        if(entry == table.end() || entry->second.depth < depth){
+        if(entry == table.end()){
             Entry table_entry; 
-            table_entry.eval_valid[eval_fuc - 1] = true;
-            table_entry.evals[eval_fuc - 1] = eval;
-            table_entry.depth = depth;
-            table_entry.alpha = alpha;
-            table_entry.beta = beta;
+            table_entry.eval_valid[eval_fuc] = true;
+            table_entry.evals[eval_fuc] = eval;
+            table_entry.depth[eval_fuc] = depth;
+            table_entry.alpha[eval_fuc] = alpha;
+            table_entry.beta[eval_fuc] = beta;
             table[board] = table_entry;
-        }else if (entry != table.end() && entry->second.depth == depth && entry->second.eval_valid[eval_fuc-1] == false){
-            entry->second.eval_valid[eval_fuc-1] = true;
-            entry->second.evals[eval_fuc-1] = eval;
+        }else{
+            if(entry->second.eval_valid[eval_fuc] && entry->second.depth[eval_fuc] < depth){
+                entry->second.evals[eval_fuc] = eval;
+                entry->second.depth[eval_fuc] = depth;
+                entry->second.alpha[eval_fuc] = alpha;
+                entry->second.beta[eval_fuc] = beta;
+            }else if(entry->second.eval_valid[eval_fuc] == false){
+                entry->second.eval_valid[eval_fuc] = true;
+                entry->second.evals[eval_fuc] = eval;
+                entry->second.depth[eval_fuc] = depth;
+                entry->second.alpha[eval_fuc] = alpha;
+                entry->second.beta[eval_fuc] = beta;
+            }
         }
         return 1;
     }
@@ -947,9 +968,11 @@ float Minimax::minimax(Board &board, unsigned short depth, float alpha, float be
 float Minimax::minimax_aux(Board &board, unsigned short depth, float alpha, float beta){
 
     auto look = table.find(board);
-    if(look != table.end() && look->second.depth >= depth && look->second.eval_valid[eval_fuc-1]){
-        //cout<<"hit"<<endl;
-        return look->second.evals[eval_fuc-1];
+    if(look != table.end() && look->second.eval_valid[eval_fuc] ){
+        if(look->second.depth[eval_fuc] >= depth){
+            //cout<<"hit"<<endl;
+            return look->second.evals[eval_fuc];
+        }
     }
     
     if(depth == 0 || board.end_game(board.current_player))
@@ -970,19 +993,31 @@ float Minimax::minimax_aux(Board &board, unsigned short depth, float alpha, floa
             if(beta <= alpha)
                 break;
         }
+        
         auto entry = table.find(board);
-        if(entry == table.end() || entry->second.depth < depth){
+        if(entry == table.end()){
             Entry table_entry; 
-            table_entry.eval_valid[eval_fuc - 1] = true;
-            table_entry.evals[eval_fuc - 1] = maxEval;
-            table_entry.depth = depth;
-            table_entry.alpha = alpha;
-            table_entry.beta = beta;
+            table_entry.eval_valid[eval_fuc] = true;
+            table_entry.evals[eval_fuc] = maxEval;
+            table_entry.depth[eval_fuc] = depth;
+            table_entry.alpha[eval_fuc] = alpha;
+            table_entry.beta[eval_fuc] = beta;
             table[board] = table_entry;
-        }else if(entry != table.end() && entry->second.depth == depth && entry->second.eval_valid[eval_fuc-1] == false){
-            entry->second.eval_valid[eval_fuc-1] = true;
-            entry->second.evals[eval_fuc-1] = maxEval;
+        }else{
+            if(entry->second.eval_valid[eval_fuc] && entry->second.depth[eval_fuc] < depth){
+                entry->second.evals[eval_fuc] = maxEval;
+                entry->second.depth[eval_fuc] = depth;
+                entry->second.alpha[eval_fuc] = alpha;
+                entry->second.beta[eval_fuc] = beta;
+            }else if(entry->second.eval_valid[eval_fuc] == false){
+                entry->second.eval_valid[eval_fuc] = true;
+                entry->second.evals[eval_fuc] = maxEval;
+                entry->second.depth[eval_fuc] = depth;
+                entry->second.alpha[eval_fuc] = alpha;
+                entry->second.beta[eval_fuc] = beta;
+            }
         }
+        
         return maxEval;
     }
     else{
@@ -997,18 +1032,29 @@ float Minimax::minimax_aux(Board &board, unsigned short depth, float alpha, floa
                 break;
         }
         auto entry = table.find(board);
-        if(entry == table.end() || entry->second.depth < depth){
+        if(entry == table.end()){
             Entry table_entry; 
-            table_entry.eval_valid[eval_fuc - 1] = true;
-            table_entry.evals[eval_fuc - 1] = minEval;
-            table_entry.depth = depth;
-            table_entry.alpha = alpha;
-            table_entry.beta = beta;
+            table_entry.eval_valid[eval_fuc] = true;
+            table_entry.evals[eval_fuc] = minEval;
+            table_entry.depth[eval_fuc] = depth;
+            table_entry.alpha[eval_fuc] = alpha;
+            table_entry.beta[eval_fuc] = beta;
             table[board] = table_entry;
-        }else if(entry != table.end() && entry->second.depth == depth && entry->second.eval_valid[eval_fuc-1] == false){
-            entry->second.eval_valid[eval_fuc-1] = true;
-            entry->second.evals[eval_fuc-1] = minEval;
+        }else{
+            if(entry->second.eval_valid[eval_fuc] && entry->second.depth[eval_fuc] < depth){
+                entry->second.evals[eval_fuc] = minEval;
+                entry->second.depth[eval_fuc] = depth;
+                entry->second.alpha[eval_fuc] = alpha;
+                entry->second.beta[eval_fuc] = beta;
+            }else if(entry->second.eval_valid[eval_fuc] == false){
+                entry->second.eval_valid[eval_fuc] = true;
+                entry->second.evals[eval_fuc] = minEval;
+                entry->second.depth[eval_fuc] = depth;
+                entry->second.alpha[eval_fuc] = alpha;
+                entry->second.beta[eval_fuc] = beta;
+            }
         }
+        
         return minEval;
     }
 }

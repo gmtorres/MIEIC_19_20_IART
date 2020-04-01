@@ -9,18 +9,23 @@ using namespace std::chrono;
 int main(void){
 
 
-    Game game = Game(true,3,3,3,3,true);
+    Game game = Game(false,3,2,3,3,true);
 
     //
 
     auto start = high_resolution_clock::now(); 
 
-    game.game_loop();
+    //game.game_loop();
     //game.get_move_ai3();
     //game.get_move_ai3();
-    /*float alpha = -INF, beta = INF,eval;
+    cout<<"START\n\n";
+    float alpha = -INF, beta = INF,eval;
     Move m;
-    game.minimax.minimax(game.board,7,alpha,beta,m,eval,start,15000000000, 3 );*/
+    game.minimax.minimax(game.board,6,alpha,beta,m,eval,start,15000000000, 3 );
+    //game.minimax.minimax(game.board,7,alpha,beta,m,eval,start,15000000000, 3 );
+    //game.minimax.minimax(game.board,8,alpha,beta,m,eval,start,15000000000, 3 );
+    //game.minimax.minimax(game.board,9,alpha,beta,m,eval,start,15000000000, 3 );
+    //game.minimax.minimax(game.board,10,alpha,beta,m,eval,start,15000000000, 3 );
 
     auto stop = high_resolution_clock::now();
 

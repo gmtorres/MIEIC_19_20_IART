@@ -129,7 +129,7 @@ struct KeyHasher{
         using std::size_t;
         using std::hash;
 
-        return hash<ulong>()(k.board_white ^ (k.board_black  << 1) >> 1) ^ k.current_player ^ ((k.capturingMove << 2) ^ k.jumpingMove) >> k.dropPiece; 
+        return hash<ulong>()(k.board_white ^ (k.board_black  << 1) >> 1 ^ (k.current_player << 5) ) ^ ((k.capturingMove << 2) ^ k.jumpingMove) >> k.dropPiece; 
     }
 
     bool operator() (const Board& k1, const Board& k2) const{
@@ -140,11 +140,12 @@ struct KeyHasher{
 
 struct Entry{
     //float eval;
-    size_t depth;
-    float alpha;
-    float beta; 
+    size_t depth[3];
+    float alpha[3];
+    float beta[3]; 
     bool eval_valid [3] = {false,false,false};
     float evals[3];
+    size_t age = 15;
 };
 
 class Minimax{
