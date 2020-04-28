@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+
+#Data
+Proj2/data/*
